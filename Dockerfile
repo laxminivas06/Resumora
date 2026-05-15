@@ -46,4 +46,4 @@ WORKDIR /app/resume_builder
 EXPOSE 8080
 
 # Run the app using gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} app:app"]
