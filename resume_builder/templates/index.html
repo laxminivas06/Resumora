@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional ATS Resume Builder | Premium WYSIWYG</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-gray: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-width: 500px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Sidebar / Form Section */
+        .sidebar {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            padding: 2rem;
+            display: none; /* Hidden until start */
+            flex-direction: column;
+            gap: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            z-index: 20;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .section-box {
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            background: #fff;
+        }
+
+        .section-box h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.4rem;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Dynamic Entries */
+        .entry-item {
+            border: 1px dashed var(--border-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            background: #f8fafc;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.25rem;
+            background: #fee2e2;
+            border-radius: 0.25rem;
+            border: none;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background: #f1f5f9;
+            border: 1px dashed var(--border-color);
+            border-radius: 0.4rem;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .add-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* Quill Styles in Sidebar */
+        .quill-editor {
+            height: 150px;
+            margin-bottom: 0.5rem;
+            background: white;
+        }
+
+        .ql-toolbar.ql-snow {
+            border-top-left-radius: 0.4rem;
+            border-top-right-radius: 0.4rem;
+            border-color: var(--border-color);
+        }
+
+        .ql-container.ql-snow {
+            border-bottom-left-radius: 0.4rem;
+            border-bottom-right-radius: 0.4rem;
+            border-color: var(--border-color);
+        }
+
+        /* Preview area background - Modal */
+        .preview-area {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85) !important;
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 40px 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .close-preview {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            color: #ef4444;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 2100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .close-preview:hover {
+            transform: scale(1.1);
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            z-index: 3000;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-content-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 2rem 0;
+        }
+
+        .welcome-content {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            padding: 2rem;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .welcome-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .welcome-text h1 {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-text .tagline {
+            font-size: 1.5rem;
+            color: #cbd5e1;
+            margin-bottom: 2.5rem;
+            line-height: 1.4;
+        }
+
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .feature-item i {
+            color: #3b82f6;
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+
+        .feature-item strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-item p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .auth-section {
+            width: 400px;
+            flex-shrink: 0;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .auth-tab.active {
+            color: var(--primary);
+        }
+
+        .auth-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider span {
+            padding: 0 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-start {
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 3rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+            background: var(--primary-hover);
+        }
+        
+        /* Footer Styling */
+        .welcome-footer {
+            width: 100%;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .g_id_signin {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Responsive page simulation */
+        .resume-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white !important;
+            padding: 0.5in 0.4in !important; /* Reduced horizontal padding */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+            display: flex;
+            flex-direction: column;
+            color: #1a1a1a !important;
+            position: relative;
+            font-family: 'Times New Roman', Times, serif !important;
+            margin: 0 auto 30px auto;
+            border: none !important;
+            transform-origin: top center;
+        }
+
+        /* Print formatting (A4) */
+        @media print {
+            body, .preview-area { background: white !important; }
+            .sidebar, .floating-controls { display: none !important; }
+            .preview-area { padding: 0 !important; display: block !important; }
+            .resume-page { 
+                margin: 0 !important; 
+                page-break-after: always !important;
+            }
+        }
+
+        /* Resume Content Styling */
+        .r-name {
+            font-size: 24pt;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            line-height: 1.1;
+            color: #000 !important;
+            font-family: 'Times New Roman', Times, serif !important;
+            text-align: center;
+        }
+
+        .r-contact {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            column-gap: 10px;
+            row-gap: 2px;
+            font-size: 10pt;
+            color: #333;
+            font-family: 'Times New Roman', Times, serif !important;
+            line-height: 1.5;
+            margin-top: 5px;
+            margin-bottom: 14px;
+            width: 100%;
+        }
+
+        .r-contact a {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            color: #1a0dab !important; /* Google-blue link colour */
+            text-decoration: none !important;
+            font-family: 'Times New Roman', Times, serif !important;
+        }
+
+        .r-contact a:hover {
+            text-decoration: underline !important;
+            color: #0000cc !important;
+        }
+
+        .r-contact .sep {
+            color: #555;
+            user-select: none;
+        }
+
+        .r-contact i {
+            font-size: 10pt;
+            color: #1a0dab;
+        }
+
+        .r-section {
+            margin-bottom: 0.55rem;
+            width: 100%;
+            display: none; /* Hidden by default, JS will show */
+            page-break-inside: avoid;
+        }
+
+        /* Skills Summary parent block */
+        .r-section-group {
+            margin-bottom: 0.55rem;
+            width: 100%;
+            display: none;
+            page-break-inside: avoid;
+        }
+
+        .r-sub-section {
+            margin-bottom: 0.4rem;
+        }
+
+        .r-sub-section-title {
+            font-size: 10.5pt;
+            font-weight: 700;
+            font-style: italic;
+            border-bottom: 0.5pt dashed #444;
+            margin-bottom: 0.25rem;
+            padding-bottom: 1pt;
+            color: #000 !important;
+        }
+
+        .r-section-title {
+            font-size: 12pt;
+            font-weight: 600; /* Softer bold */
+            text-transform: uppercase;
+            border-bottom: 1pt solid #000 !important;
+            margin-bottom: 0.4rem;
+            padding-bottom: 1pt;
+            color: #000 !important;
+            text-align: left !important; /* Title Left Aligned */
+        }
+
+        .r-content {
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000 !important;
+            text-align: justify !important; /* Justified: even edges */
+        }
+
+        .r-content p, .r-content div, .r-content span, .r-content li {
+            font-family: 'Times New Roman', Times, serif !important;
+            color: #000 !important;
+        }
+
+        /* Professional Education/Experience Entry */
+        .entry-header {
+            display: flex;
+            justify-content: flex-start; /* Left Aligned */
+            align-items: baseline;
+            font-weight: 700;
+            font-size: 11pt;
+            color: #000 !important;
+            gap: 10px;
+        }
+
+        .entry-subheader {
+            display: flex;
+            justify-content: flex-start; /* Left Aligned */
+            font-style: italic;
+            font-size: 10pt;
+            color: #000 !important;
+            gap: 10px;
+        }
+
+        .entry-title {
+            font-weight: 700;
+            color: #000 !important;
+        }
+
+        .entry-date {
+            font-weight: 700;
+            color: #000 !important;
+        }
+
+        .entry-detail {
+            font-size: 10pt;
+            margin-top: 1px;
+            color: #000 !important;
+        }
+
+        .entry-description {
+            margin-top: 0.15rem;
+            font-size: 10pt;
+            color: #000 !important;
+        }
+
+        .entry-description ul {
+            margin-left: 1.5rem;
+            margin-top: 0.1rem;
+        }
+
+        /* Hyperlink Support in Content */
+        .r-content a {
+            color: #1a0dab !important;
+            text-decoration: none !important;
+        }
+        .r-content a:hover { text-decoration: underline !important; }
+
+        /* Entry layout */
+        .entry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .entry-row .entry-title { flex: 1; }
+        .entry-row .entry-date  { white-space: nowrap; font-style: italic; font-size: 9.5pt; }
+
+        /* Prevent page-break inside any entry */
+        .r-entry { page-break-inside: avoid; break-inside: avoid; margin-bottom: 0.6rem; }
+
+        /* Floating Controls */
+        .floating-actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-fab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-fab:hover {
+            transform: scale(1.05);
+            background: var(--primary-hover);
+        }
+
+        /* Page Break Avoid */
+        .r-section, .entry-header, .entry-subheader {
+            page-break-inside: avoid;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 1024px) {
+            .sidebar { width: 100%; height: 100vh; padding: 1.5rem; }
+            .preview-area { padding: 20px 10px; }
+            .resume-page { width: 100%; min-height: auto; transform: none !important; margin-bottom: 20px; padding: 20px !important; }
+        }
+        @media (max-width: 900px) {
+            .welcome-content {
+                flex-direction: column;
+                gap: 2rem;
+                padding: 1rem;
+            }
+            .welcome-text {
+                text-align: center;
+            }
+            .feature-item {
+                text-align: left;
+            }
+            .auth-section {
+                width: 100%;
+                max-width: 400px;
+            }
+            .welcome-text h1 { font-size: 3rem; }
+        }
+        @media (max-width: 600px) {
+            .r-contact { flex-direction: column; align-items: center; gap: 4px; }
+            .r-contact .sep { display: none; }
+            .r-name { font-size: 18pt; }
+            .btn-start { width: 100%; justify-content: center; }
+            .action-buttons { flex-direction: column; }
+            .welcome-footer {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-content-wrapper">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <i data-lucide="file-text" style="width: 60px; height: 60px; color: #3b82f6; margin-bottom: 20px;"></i>
+                    <h1>Resumora</h1>
+                    <p class="tagline">The Fully Optimized, Single-Template Resume Builder.</p>
+                    
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>No Template Confusion</strong>
+                                <p>We use a single, highly customized and responsive format proven to work for both modern CVs and classic resumes. No need to stress over choosing templates.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>ATS & Formatting Optimized</strong>
+                                <p>Automatically manages spacing, alignment, and page breaks to keep your resume perfectly formatted and machine-readable for top ATS scores.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>Profile & Dashboard</strong>
+                                <p>Sign in to generate, download, and seamlessly track all your tailored resumes directly from your personal dashboard.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-section">
+                    <div class="login-card" id="authCard">
+                        <div class="auth-tabs">
+                            <button class="auth-tab active" id="tabSignup" onclick="switchAuth('signup')">Sign Up</button>
+                            <button class="auth-tab" id="tabLogin" onclick="switchAuth('login')">Login</button>
+                        </div>
+                        
+                        <!-- Sign Up Form -->
+                        <form id="signupForm" onsubmit="handleBasicLogin(event)" class="basic-login-form">
+                            <input type="text" placeholder="Full Name" required class="login-input">
+                            <input type="tel" placeholder="Contact Number" required class="login-input">
+                            <input type="email" placeholder="Email Address" required class="login-input">
+                            <input type="password" placeholder="Create Password" required class="login-input">
+                            <button type="submit" class="btn-start" style="width: 100%; justify-content: center; padding: 0.85rem; border-radius: 0.5rem; margin-top: 0.5rem;">
+                                Sign Up
+                            </button>
+                        </form>
+
+                        <!-- Login Form -->
+                        <form id="loginForm" onsubmit="handleBasicLogin(event)" class="basic-login-form" style="display: none;">
+                            <input type="email" placeholder="Email Address" required class="login-input">
+                            <input type="password" placeholder="Password" required class="login-input">
+                            <button type="submit" class="btn-start" style="width: 100%; justify-content: center; padding: 0.85rem; border-radius: 0.5rem; margin-top: 0.5rem;">
+                                Login
+                            </button>
+                        </form>
+
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+
+                        <!-- Google Sign In -->
+                        <div id="g_id_onload"
+                             data-client_id="249135484823-asea6krdjnir2l6brql1mbjp7ajs1j6i.apps.googleusercontent.com"
+                             data-context="signin"
+                             data-ux_mode="popup"
+                             data-callback="handleGoogleLogin"
+                             data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <a href="/hidden-admin-login" style="color: #cbd5e1; text-decoration: none; font-size: 0.95rem; font-weight: 500; opacity: 0.8; transition: opacity 0.2s;">Admin Login <i data-lucide="lock" style="width:14px; display:inline; vertical-align:middle;"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="welcome-footer">
+            <p>&copy; 2026 Resumora. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Support</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Area -->
+    <div id="userDashboard" style="display: none; padding: 2rem; max-width: 900px; margin: 0 auto; min-height: 100vh;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+            <div class="header-logo">
+                <i data-lucide="file-text" style="color:var(--primary)"></i>
+                <h1>Resumora Dashboard</h1>
+            </div>
+            <button class="add-btn" style="width: auto; padding: 0.5rem 1rem; margin: 0;" onclick="logout()"><i data-lucide="log-out" style="width: 16px; display:inline; vertical-align:middle;"></i> Logout</button>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>My Resumes</h2>
+            <button class="btn-start" style="padding: 0.5rem 1.5rem; font-size: 1rem;" onclick="showBuilder()">+ Create New</button>
+        </div>
+        
+        <div style="background: white; border-radius: 0.5rem; padding: 4rem 2rem; text-align: center; color: var(--text-muted); box-shadow: 0 0 20px rgba(0,0,0,0.05);">
+            <i data-lucide="folder-open" style="width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p style="font-size: 1.1rem; color: var(--text-main); font-weight: 600;">No resumes generated yet.</p>
+            <p style="font-size: 0.95rem; margin-top: 0.5rem;">Resumes you generate and download will automatically appear here.</p>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="resumeBuilder">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
+            <div class="header-logo">
+                <i data-lucide="file-text" style="color:var(--primary)"></i>
+                <h1>Resumora Builder</h1>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="add-btn" style="width: auto; padding: 0.5rem 1rem; margin: 0;" onclick="showDashboard()"><i data-lucide="layout-dashboard" style="width: 16px; display:inline; vertical-align:middle;"></i> Dashboard</button>
+            </div>
+        </div>
+
+        <div id="resumeForm">
+            <!-- Personal Details -->
+            <div class="section-box">
+                <h2><i data-lucide="user"></i> Personal Details</h2>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="in_name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="in_email" placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="in_phone" placeholder="+91 99999 99999">
+                </div>
+                <div class="form-group">
+                    <label>Location (City, State)</label>
+                    <input type="text" id="in_location" placeholder="New York, NY">
+                </div>
+                <div class="form-group">
+                    <label>LinkedIn URL</label>
+                    <input type="text" id="in_linkedin" placeholder="https://linkedin.com/in/username">
+                </div>
+                <div class="form-group">
+                    <label>GitHub URL</label>
+                    <input type="text" id="in_github" placeholder="https://github.com/username">
+                </div>
+                <div class="form-group">
+                    <label>Website / Portfolio URL</label>
+                    <input type="text" id="in_portfolio" placeholder="https://yourwebsite.com">
+                </div>
+            </div>
+            
+            <!-- Professional Summary -->
+            <div class="section-box">
+                <h2><i data-lucide="file-edit"></i> Professional Summary</h2>
+                <div id="editor_summary" class="quill-editor"></div>
+            </div>
+
+            <!-- Technical Skills -->
+            <div class="section-box">
+                <h2><i data-lucide="cpu"></i> Technical Skills</h2>
+                <div id="editor_tech_skills" class="quill-editor"></div>
+                <h2 style="margin-top:1.5rem"><i data-lucide="users"></i> Non-Technical Skills</h2>
+                <div id="editor_non_tech_skills" class="quill-editor"></div>
+            </div>
+
+            <!-- Education (Dynamic) -->
+            <div class="section-box" id="sec_education">
+                <h2><i data-lucide="graduation-cap"></i> Education</h2>
+                <div id="education_entries"></div>
+                <button class="add-btn" onclick="addEntry('education')">+ Add Education</button>
+            </div>
+
+            <!-- Experience (Dynamic) -->
+            <div class="section-box" id="sec_experience">
+                <h2><i data-lucide="briefcase"></i> Experience</h2>
+                <div id="experience_entries"></div>
+                <button class="add-btn" onclick="addEntry('experience')">+ Add Experience</button>
+            </div>
+
+            <!-- Projects (Dynamic) -->
+            <div class="section-box" id="sec_projects">
+                <h2><i data-lucide="code"></i> Projects</h2>
+                <div id="projects_entries"></div>
+                <button class="add-btn" onclick="addEntry('projects')">+ Add Project</button>
+            </div>
+
+            <!-- Other Sections -->
+            <div class="section-box">
+                <h2><i data-lucide="award"></i> Certifications</h2>
+                <div id="editor_certs" class="quill-editor"></div>
+                
+                <h2 style="margin-top:1.5rem"><i data-lucide="book-open"></i> Publications & Research</h2>
+                <div id="editor_research" class="quill-editor"></div>
+                
+                <h2 style="margin-top:1.5rem"><i data-lucide="star"></i> Achievements & Hackathons</h2>
+                <div id="editor_achievements" class="quill-editor"></div>
+                
+                <h2 style="margin-top:1.5rem"><i data-lucide="zap"></i> Extracurricular Activities</h2>
+                <div id="editor_extra" class="quill-editor"></div>
+            </div>
+
+            <div style="padding: 1rem 0; display:flex; flex-direction:column; gap:10px">
+                <div class="action-buttons" style="display:flex; gap:10px">
+                    <button onclick="togglePreview(true)" class="add-btn" style="flex:1; background:#f8fafc; color:var(--primary); border:2px solid var(--primary); padding:12px; font-size:1rem; margin:0; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i data-lucide="eye" style="width:18px"></i> Preview
+                    </button>
+                    <button onclick="saveAndDownload()" class="add-btn" style="flex:1; background:var(--primary); color:white; border:none; padding:12px; font-size:1rem; margin:0; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i data-lucide="download" style="width:18px"></i> Download PDF
+                    </button>
+                </div>
+                <button onclick="clearAllData()" class="add-btn" style="background:#ef4444; color:white; border:none; padding:12px; font-size:0.9rem; margin-top:10px">Clear All Data</button>
+            </div>
+            
+            <!-- Spacing -->
+            <div style="height: 100px;"></div>
+        </div>
+    </aside>
+
+<!-- Preview Area -->
+<div class="preview-area" id="previewArea">
+    <button class="close-preview" onclick="togglePreview(false)">
+        <i data-lucide="x"></i>
+    </button>
+    <div class="resume-page" id="page1">
+        <div class="resume-header">
+            <div class="r-name" id="view_name">Your Name</div>
+            <div class="r-contact" id="view_contact">
+                <a href="#" id="cont_email">email@example.com</a>
+                <a href="#" id="cont_phone">+91 99999 99999</a>
+                <a href="#" id="cont_location">City, State</a>
+                <a href="#" id="cont_linkedin" target="_blank">LinkedIn</a>
+                <a href="#" id="cont_github" target="_blank">GitHub</a>
+                <a href="#" id="cont_portfolio" target="_blank">Portfolio</a>
+            </div>
+        </div>
+
+        <div id="resume_content_flow">
+            <!-- 1. Objective / Professional Summary -->
+            <div class="r-section" id="sec_view_summary">
+                <div class="r-section-title">Professional Summary / Objective</div>
+                <div class="r-content ql-editor" id="view_summary" style="padding:0"></div>
+            </div>
+
+            <!-- 2. Education -->
+            <div class="r-section" id="sec_view_education">
+                <div class="r-section-title">Education</div>
+                <div class="r-content" id="view_education_list"></div>
+            </div>
+
+            <!-- 3. Skills Summary (group) -->
+            <div class="r-section-group" id="sec_group_skills">
+                <div class="r-section-title">Skills Summary</div>
+                <div class="r-sub-section" id="sub_sec_tech_skills">
+                    <div class="r-sub-section-title">Technical Skills</div>
+                    <div class="r-content ql-editor" id="view_tech_skills" style="padding:0; text-align:left;"></div>
+                </div>
+                <div class="r-sub-section" id="sub_sec_non_tech_skills">
+                    <div class="r-sub-section-title">Non-Technical Skills</div>
+                    <div class="r-content ql-editor" id="view_non_tech_skills" style="padding:0; text-align:left;"></div>
+                </div>
+            </div>
+
+            <!-- 4. Experience -->
+            <div class="r-section" id="sec_view_experience">
+                <div class="r-section-title">Experience</div>
+                <div class="r-content" id="view_experience_list"></div>
+            </div>
+
+            <!-- 5. Projects -->
+            <div class="r-section" id="sec_view_projects">
+                <div class="r-section-title">Projects</div>
+                <div class="r-content" id="view_projects_list"></div>
+            </div>
+
+            <!-- 6. Publications -->
+            <div class="r-section" id="sec_view_research">
+                <div class="r-section-title">Publications</div>
+                <div class="r-content ql-editor" id="view_research" style="padding:0"></div>
+            </div>
+
+            <!-- 7. Honors & Awards -->
+            <div class="r-section" id="sec_view_achievements">
+                <div class="r-section-title">Honors &amp; Awards</div>
+                <div class="r-content ql-editor" id="view_achievements" style="padding:0"></div>
+            </div>
+
+            <!-- 8. Certifications -->
+            <div class="r-section" id="sec_view_certs">
+                <div class="r-section-title">Certifications</div>
+                <div class="r-content ql-editor" id="view_certs" style="padding:0"></div>
+            </div>
+
+            <!-- 9. Extracurricular Activities -->
+            <div class="r-section" id="sec_view_extra">
+                <div class="r-section-title">Extracurricular Activities</div>
+                <div class="r-content ql-editor" id="view_extra" style="padding:0"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Actions Removed as per request -->
+<div class="floating-actions" style="display:none"></div>
+
+<script>
+    // Navigation Functions
+    function switchAuth(type) {
+        if(type === 'login') {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('tabLogin').classList.add('active');
+            document.getElementById('tabSignup').classList.remove('active');
+        } else {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('tabLogin').classList.remove('active');
+            document.getElementById('tabSignup').classList.add('active');
+        }
+    }
+
+    function handleBasicLogin(event) {
+        event.preventDefault();
+        // Backend integration placeholder
+        showDashboard();
+    }
+
+    async function handleGoogleLogin(response) {
+        try {
+            const res = await fetch('/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: response.credential })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                // Show dashboard after successful login
+                showDashboard();
+            } else {
+                alert('Login failed: ' + data.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error during login');
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('resumeBuilder').style.display = 'none';
+        document.getElementById('userDashboard').style.display = 'block';
+        lucide.createIcons();
+    }
+
+    function showBuilder() {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('userDashboard').style.display = 'none';
+        document.getElementById('resumeBuilder').style.display = 'flex';
+        // Reinitialize quill to fix display issues after unhiding
+        Object.keys(editors).forEach(key => {
+            if(editors[key]) {
+               // Triggers layout recalculation
+            }
+        });
+        lucide.createIcons();
+    }
+
+    function logout() {
+        document.getElementById('userDashboard').style.display = 'none';
+        document.getElementById('resumeBuilder').style.display = 'none';
+        document.getElementById('welcomeScreen').style.display = 'flex';
+        lucide.createIcons();
+    }
+
+    function togglePreview(show) {
+        document.getElementById('previewArea').style.display = show ? 'flex' : 'none';
+        if (show) updatePreview();
+    }
+
+    // Initialize Lucide
+    lucide.createIcons();
+
+    // Icon Constants from Backend
+    const ICON_WEBSITE = "{{ ICON_WEBSITE }}";
+    const ICON_LINKEDIN = "{{ ICON_LINKEDIN }}";
+    const ICON_GITHUB = "{{ ICON_GITHUB }}";
+    const ICON_EMAIL = "{{ ICON_EMAIL }}";
+    const ICON_PHONE = "{{ ICON_PHONE }}";
+    const ICON_LOCATION = "{{ ICON_LOCATION }}";
+
+    // Quill Configuration
+    const quillOptions = {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                ['link'],
+                [{ 'list': 'bullet' }],
+                ['clean']
+            ],
+            keyboard: {
+                bindings: {
+                    bold: {
+                        key: 'B',
+                        shortKey: true,
+                        handler: function(range, context) {
+                            const format = this.quill.getFormat(range);
+                            this.quill.format('bold', !format.bold);
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // Initialize Static Editors
+    const editors = {
+        summary: new Quill('#editor_summary', quillOptions),
+        tech_skills: new Quill('#editor_tech_skills', quillOptions),
+        non_tech_skills: new Quill('#editor_non_tech_skills', quillOptions),
+        certs: new Quill('#editor_certs', quillOptions),
+        research: new Quill('#editor_research', quillOptions),
+        achievements: new Quill('#editor_achievements', quillOptions),
+        extra: new Quill('#editor_extra', quillOptions)
+    };
+
+    // Dynamic Entry Management
+    const entryStore = {
+        education: [],
+        experience: [],
+        projects: []
+    };
+
+    function addEntry(type, existingFields = null) {
+        const id = Date.now();
+        const entry = { id, type };
+        
+        if (existingFields) {
+            entry.fields = { ...existingFields };
+        } else {
+            if (type === 'education') {
+                entry.fields = { institution: '', degree: '', dates: '', detail: '' };
+            } else if (type === 'experience') {
+                entry.fields = { company: '', role: '', dates: '', description: '' };
+            } else if (type === 'projects') {
+                entry.fields = { name: '', link: '', description: '' };
+            }
+        }
+
+        entryStore[type].push(entry);
+        renderEntryInputs(type, entry);
+        updatePreview();
+        saveState();
+    }
+
+    function renderEntryInputs(type, entry) {
+        const container = document.getElementById(`${type}_entries`);
+        const div = document.createElement('div');
+        div.className = 'entry-item';
+        div.id = `entry_input_${entry.id}`;
+
+        let html = `<button class="remove-btn" onclick="removeEntry('${type}', ${entry.id})"><i data-lucide="trash-2" style="width:14px"></i></button>`;
+        
+        if (type === 'education') {
+            html += `
+                <input type="text" placeholder="Institution Name" value="${entry.fields.institution || ''}" oninput="updateField('${type}', ${entry.id}, 'institution', this.value)" style="font-weight:700; margin-bottom:0.5rem">
+                <input type="text" placeholder="Degree / Domain" value="${entry.fields.degree || ''}" oninput="updateField('${type}', ${entry.id}, 'degree', this.value)" style="margin-bottom:0.5rem">
+                <input type="text" placeholder="Year Range (e.g. 2021 - 2025)" value="${entry.fields.dates || ''}" oninput="updateField('${type}', ${entry.id}, 'dates', this.value)" style="margin-bottom:0.5rem">
+                <input type="text" placeholder="CGPA / Percentage" value="${entry.fields.detail || ''}" oninput="updateField('${type}', ${entry.id}, 'detail', this.value)">
+            `;
+        } else if (type === 'experience') {
+            html += `
+                <input type="text" placeholder="Company Name" value="${entry.fields.company || ''}" oninput="updateField('${type}', ${entry.id}, 'company', this.value)" style="font-weight:700; margin-bottom:0.5rem">
+                <input type="text" placeholder="Role / Position" value="${entry.fields.role || ''}" oninput="updateField('${type}', ${entry.id}, 'role', this.value)" style="margin-bottom:0.5rem">
+                <input type="text" placeholder="Dates" value="${entry.fields.dates || ''}" oninput="updateField('${type}', ${entry.id}, 'dates', this.value)" style="margin-bottom:0.5rem">
+                <div id="desc_${entry.id}" class="quill-editor" style="height:100px"></div>
+            `;
+        } else if (type === 'projects') {
+            html += `
+                <input type="text" placeholder="Project Name" value="${entry.fields.name || ''}" oninput="updateField('${type}', ${entry.id}, 'name', this.value)" style="font-weight:700; margin-bottom:0.5rem">
+                <input type="text" placeholder="Project Link (Optional)" value="${entry.fields.link || ''}" oninput="updateField('${type}', ${entry.id}, 'link', this.value)" style="margin-bottom:0.5rem">
+                <div id="desc_${entry.id}" class="quill-editor" style="height:100px"></div>
+            `;
+        }
+
+        div.innerHTML = html;
+        container.appendChild(div);
+        lucide.createIcons();
+
+        // Initialize Quill for dynamic description if exists
+        if (type === 'experience' || type === 'projects') {
+            const editor = new Quill(`#desc_${entry.id}`, quillOptions);
+            if (entry.fields.description) {
+                editor.clipboard.dangerouslyPasteHTML(entry.fields.description);
+            }
+            editor.on('text-change', () => {
+                updateField(type, entry.id, 'description', editor.root.innerHTML);
+            });
+        }
+    }
+
+    function removeEntry(type, id) {
+        entryStore[type] = entryStore[type].filter(e => e.id !== id);
+        document.getElementById(`entry_input_${id}`).remove();
+        updatePreview();
+        saveState();
+    }
+
+    function updateField(type, id, field, value) {
+        const entry = entryStore[type].find(e => e.id === id);
+        if (entry) {
+            entry.fields[field] = value;
+            updatePreview();
+            saveState();
+        }
+    }
+
+    // Live Preview Logic
+    // Preview Rendering
+    function updatePreview() {
+        // Name
+        const nameVal = document.getElementById('in_name').value.trim();
+        const viewName = document.getElementById('view_name');
+        viewName.innerText = nameVal;
+        viewName.style.display = nameVal ? 'block' : 'none';
+        
+        // Contact Details
+        const contactContainer = document.getElementById('view_contact');
+        const contactInputs = {
+            email: { val: document.getElementById('in_email').value.trim(), id: 'cont_email', icon: ICON_EMAIL, type: 'mail' },
+            phone: { val: document.getElementById('in_phone').value.trim(), id: 'cont_phone', icon: ICON_PHONE, type: 'tel' },
+            location: { val: document.getElementById('in_location').value.trim(), id: 'cont_location', icon: ICON_LOCATION, type: 'map' },
+            linkedin: { val: document.getElementById('in_linkedin').value.trim(), id: 'cont_linkedin', icon: ICON_LINKEDIN, label: 'LinkedIn' },
+            github: { val: document.getElementById('in_github').value.trim(), id: 'cont_github', icon: ICON_GITHUB, label: 'GitHub' },
+            portfolio: { val: document.getElementById('in_portfolio').value.trim(), id: 'cont_portfolio', icon: ICON_WEBSITE, label: 'Website' }
+        };
+
+        let contactHtml = '';
+        const activeContacts = Object.entries(contactInputs).filter(([k, v]) => v.val);
+        
+        activeContacts.forEach(([key, info], idx) => {
+            let href = info.val;
+            if (info.type === 'mail') href = 'mailto:' + info.val;
+            else if (info.type === 'tel') href = 'tel:' + info.val.replace(/\s+/g, '');
+            else if (info.type === 'map') href = 'https://www.google.com/maps/search/' + encodeURIComponent(info.val);
+            else if (!info.val.startsWith('http')) href = 'https://' + info.val;
+
+            const label = info.label || info.val;
+            const isImageUrl = info.icon.startsWith('http') || info.icon.includes('.png') || info.icon.includes('.jpg');
+            const iconHtml = isImageUrl 
+                ? `<img src="${info.icon}" style="width:16px; height:16px; object-fit:contain;" alt="${label}">`
+                : `<i class="${info.icon}" style="font-size:12pt; color:#000;"></i>`;
+
+            contactHtml += `<a href="${href}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; color:#0000EE; text-decoration:none;">
+                ${iconHtml} ${label}
+            </a>`;
+            
+            if (idx < activeContacts.length - 1) {
+                contactHtml += `<span style="color:#000;">|</span>`;
+            }
+        });
+
+        contactContainer.innerHTML = contactHtml;
+        contactContainer.style.display = activeContacts.length > 0 ? 'flex' : 'none';
+
+        // Quill sections
+        const quillKeys = ['summary', 'tech_skills', 'non_tech_skills', 'certs', 'research', 'achievements', 'extra'];
+        quillKeys.forEach(key => {
+            const editor = editors[key];
+            if (!editor) return;
+            const html = editor.root.innerHTML;
+            const viewEl  = document.getElementById(`view_${key}`);
+            const secEl   = document.getElementById(`sec_view_${key}`);
+            if (!viewEl) return;
+            const text = editor.getText().trim();
+            if (viewEl) viewEl.innerHTML = text ? html : '';
+        });
+
+        // Skills Summary group: show if either skill field has content
+        const hasTech    = editors.tech_skills.getText().trim().length > 0;
+        const hasNonTech = editors.non_tech_skills.getText().trim().length > 0;
+        const skillsGroup = document.getElementById('sec_group_skills');
+        const subTech     = document.getElementById('sub_sec_tech_skills');
+        const subNonTech  = document.getElementById('sub_sec_non_tech_skills');
+        if (skillsGroup) {
+            skillsGroup.style.display = (hasTech || hasNonTech) ? 'block' : 'none';
+            if (subTech)    subTech.style.display    = hasTech    ? 'block' : 'none';
+            if (subNonTech) subNonTech.style.display = hasNonTech ? 'block' : 'none';
+        }
+
+        // Individual quill section visibility (all except skills which are grouped)
+        ['summary','certs','research','achievements','extra'].forEach(key => {
+            const editor = editors[key];
+            const secEl  = document.getElementById(`sec_view_${key}`);
+            if (!editor || !secEl) return;
+            secEl.style.display = editor.getText().trim() ? 'block' : 'none';
+        });
+
+        // Dynamic Sections
+        const checkList = (type) => {
+            const entries = entryStore[type];
+            const secEl   = document.getElementById(`sec_view_${type}`);
+            const hasData = entries.some(e => Object.values(e.fields).some(v => String(v).trim().length > 0));
+            if (hasData) { secEl.style.display = 'block'; renderList(type); }
+            else         { secEl.style.display = 'none'; }
+        };
+        checkList('education');
+        checkList('experience');
+        checkList('projects');
+
+        handlePageBreaking();
+    }
+
+    function renderList(type) {
+        const container = document.getElementById(`view_${type}_list`);
+        const secEl     = document.getElementById(`sec_view_${type}`);
+        container.innerHTML = '';
+
+        if (entryStore[type].length === 0) { secEl.style.display = 'none'; return; }
+        secEl.style.display = 'block';
+
+        entryStore[type].forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'r-entry';
+            const f = entry.fields;
+            let html = '';
+
+            if (type === 'education') {
+                html = `
+                    <div class="entry-row">
+                        <span class="entry-title">${f.institution || ''}</span>
+                        <span class="entry-date">${f.dates || ''}</span>
+                    </div>
+                    ${f.degree ? `<div style="font-style:italic; font-size:9.5pt; color:#000;">${f.degree}</div>` : ''}
+                    ${f.detail ? `<div class="r-content" style="text-align:justify; font-size:9.5pt;">${f.detail}</div>` : ''}
+                `;
+            } else if (type === 'experience') {
+                html = `
+                    <div class="entry-row">
+                        <span class="entry-title">${f.company || ''}</span>
+                        <span class="entry-date">${f.dates || ''}</span>
+                    </div>
+                    ${f.role ? `<div style="font-style:italic; font-size:9.5pt; color:#000;">${f.role}</div>` : ''}
+                    ${f.description ? `<div class="entry-description ql-editor r-content" style="padding:0; text-align:justify; font-size:9.5pt; hyphens:auto;">${f.description}</div>` : ''}
+                `;
+            } else if (type === 'projects') {
+                const linkHref = f.link ? (f.link.startsWith('http') ? f.link : 'https://' + f.link) : '';
+                html = `
+                    <div class="entry-row">
+                        <span class="entry-title">${f.name || ''}
+                            ${linkHref ? `&nbsp;<a href="${linkHref}" target="_blank" style="font-size:8.5pt; font-weight:normal; color:#1a0dab;">[Link]</a>` : ''}
+                        </span>
+                    </div>
+                    ${f.description ? `<div class="entry-description ql-editor r-content" style="padding:0; text-align:justify; font-size:9.5pt; hyphens:auto;">${f.description}</div>` : ''}
+                `;
+            }
+            div.innerHTML = html;
+            container.appendChild(div);
+        });
+    }
+
+    function handlePageBreaking() {
+        const previewArea        = document.getElementById('previewArea');
+        const firstPage          = document.getElementById('page1');
+        const contentFlow        = document.getElementById('resume_content_flow');
+
+        // Canonical section order (must match DOM order above)
+        const sectionOrder = [
+            'sec_view_summary',
+            'sec_view_education',
+            'sec_group_skills',
+            'sec_view_experience',
+            'sec_view_projects',
+            'sec_view_research',
+            'sec_view_achievements',
+            'sec_view_certs',
+            'sec_view_extra'
+        ];
+
+        // Re-append all sections to contentFlow in correct order
+        sectionOrder.forEach(id => {
+            const sec = document.getElementById(id);
+            if (sec) contentFlow.appendChild(sec);
+        });
+
+        // Remove extra pages
+        previewArea.querySelectorAll('.resume-page').forEach((pg, idx) => { if (idx > 0) pg.remove(); });
+
+        setTimeout(() => {
+            const pageHeightPx    = firstPage.offsetHeight || 1122;
+            const threshold       = pageHeightPx * 0.90; // move section if past 90% of page
+            const headerHeight    = (firstPage.querySelector('.resume-header') || {}).offsetHeight || 0;
+
+            let accumulatedHeight = headerHeight + 20;
+            let currentContainer  = contentFlow;
+
+            Array.from(contentFlow.children).forEach(section => {
+                if (section.style.display === 'none') return;
+                const h = section.offsetHeight;
+                // If this section would start past 90% of page, push to new page
+                if (accumulatedHeight + h > threshold) {
+                    const newPage = document.createElement('div');
+                    newPage.className = 'resume-page';
+                    const newFlow = document.createElement('div');
+                    newFlow.id = 'content_flow_' + Date.now();
+                    newPage.appendChild(newFlow);
+                    previewArea.appendChild(newPage);
+                    currentContainer  = newFlow;
+                    accumulatedHeight = 0;
+                }
+                currentContainer.appendChild(section);
+                accumulatedHeight += h + 14;
+            });
+        }, 150);
+    }
+
+    // Collect all form data into a single object
+    function collectFormData() {
+        return {
+            personal_details: {
+                name: document.getElementById('in_name').value,
+                email: document.getElementById('in_email').value,
+                phone: document.getElementById('in_phone').value,
+                location: document.getElementById('in_location').value,
+                linkedin: document.getElementById('in_linkedin').value,
+                github: document.getElementById('in_github').value,
+                portfolio: document.getElementById('in_portfolio').value
+            },
+            professional_details: {
+                summary: editors.summary.root.innerHTML,
+                technical_skills: editors.tech_skills.root.innerHTML,
+                non_technical_skills: editors.non_tech_skills.root.innerHTML,
+                education: entryStore.education.map(e => e.fields),
+                work_experience: entryStore.experience.map(e => e.fields),
+                projects: entryStore.projects.map(e => e.fields),
+                certifications: editors.certs.root.innerHTML,
+                research_papers: editors.research.root.innerHTML,
+                achievements: editors.achievements.root.innerHTML,
+                extracurricular_activities: editors.extra.root.innerHTML
+            }
+        };
+    }
+
+    // Save & Download PDF (Backend Only)
+    async function saveAndDownload() {
+        saveState();
+        const data = collectFormData();
+
+        if (!data.personal_details.name || !data.personal_details.email) {
+            alert('Please provide at least Name and Email');
+            return;
+        }
+
+        try {
+            // 1. Save data to backend
+            const saveRes = await fetch('/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!saveRes.ok) {
+                console.warn('Backend save failed, but proceeding with PDF generation.');
+            }
+
+            // 2. Generate PDF locally using html2pdf
+            // Note: index.html uses a live preview in the #resume-preview-container
+            const element = document.getElementById('resume-preview-container');
+            const opt = {
+                margin: 0,
+                filename: `${data.personal_details.name.replace(/ /g, '_')}_Resume.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                alert('Thank you! Your resume has been generated and downloaded.');
+            }).catch(err => {
+                console.error('PDF Generation Error:', err);
+                alert('Error generating PDF locally.');
+            });
+
+        } catch (err) {
+            console.error(err);
+            alert('Error connecting to backend server.');
+        }
+    }
+
+    // Removed old screenshot-based download function to favor professional backend generation
+    // function downloadPDF() { ... }
+
+    // Persistence Logic (Local Storage)
+    let isRestoring = true; // Start as true to prevent any initial events from saving empty state
+
+    function saveState() {
+        if (isRestoring) return;
+        
+        const state = {
+            personal: {
+                name: document.getElementById('in_name').value,
+                email: document.getElementById('in_email').value,
+                phone: document.getElementById('in_phone').value,
+                location: document.getElementById('in_location').value,
+                linkedin: document.getElementById('in_linkedin').value,
+                github: document.getElementById('in_github').value,
+                portfolio: document.getElementById('in_portfolio').value
+            },
+            quill: {},
+            dynamic: entryStore
+        };
+
+        Object.keys(editors).forEach(key => {
+            state.quill[key] = editors[key].root.innerHTML;
+        });
+
+        localStorage.setItem('resume_builder_state', JSON.stringify(state));
+    }
+
+    async function loadState() {
+        let saved = localStorage.getItem('resume_builder_state');
+        
+        // If not in local storage, try to fetch from backend
+        if (!saved) {
+            try {
+                const response = await fetch('/last_resume');
+                if (response.ok) {
+                    const backendData = await response.json();
+                    if (backendData && backendData.personal_details) {
+                        // Transform backend format to local storage format
+                        saved = JSON.stringify({
+                            personal: backendData.personal_details,
+                            quill: {
+                                summary: backendData.professional_details.summary,
+                                tech_skills: backendData.professional_details.technical_skills,
+                                non_tech_skills: backendData.professional_details.non_technical_skills,
+                                certs: backendData.professional_details.certifications,
+                                research: backendData.professional_details.research_papers,
+                                achievements: backendData.professional_details.achievements,
+                                extra: backendData.professional_details.extracurricular_activities
+                            },
+                            dynamic: {
+                                education: backendData.professional_details.education.map((f, i) => ({ id: Date.now() + i, type: 'education', fields: f })),
+                                experience: backendData.professional_details.work_experience.map((f, i) => ({ id: Date.now() + 1000 + i, type: 'experience', fields: f })),
+                                projects: backendData.professional_details.projects.map((f, i) => ({ id: Date.now() + 2000 + i, type: 'projects', fields: f }))
+                            }
+                        });
+                        console.log("Loaded data from backend");
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching from backend", err);
+            }
+        }
+
+        if (!saved) {
+            isRestoring = false;
+            updatePreview();
+            return;
+        }
+
+        try {
+            isRestoring = true;
+            const state = JSON.parse(saved);
+            
+            // Restore Personal
+            if (state.personal) {
+                Object.keys(state.personal).forEach(key => {
+                    const el = document.getElementById('in_' + key);
+                    if (el) el.value = state.personal[key] || '';
+                });
+            }
+
+            // Restore Dynamic
+            if (state.dynamic) {
+                Object.keys(state.dynamic).forEach(type => {
+                    if (entryStore[type]) {
+                        entryStore[type] = []; // Clear current
+                        const container = document.getElementById(type + '_entries');
+                        if (container) container.innerHTML = ''; // Clear DOM
+                        state.dynamic[type].forEach(entry => {
+                            addEntry(type, entry.fields);
+                        });
+                    }
+                });
+            }
+
+            // Restore Quill
+            if (state.quill) {
+                Object.keys(state.quill).forEach(key => {
+                    if (editors[key] && state.quill[key]) {
+                        // Use a slight delay for Quill to ensure it's ready
+                        editors[key].clipboard.dangerouslyPasteHTML(state.quill[key]);
+                    }
+                });
+            }
+
+            // Use a timeout to ensure all events triggered by restoration are ignored
+            setTimeout(() => {
+                isRestoring = false;
+                updatePreview();
+                console.log("State restored successfully");
+            }, 200);
+
+        } catch (e) {
+            isRestoring = false;
+            console.error("Error loading saved state", e);
+            updatePreview();
+        }
+    }
+
+    function clearAllData() {
+        if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+            localStorage.removeItem('resume_builder_state');
+            location.reload();
+        }
+    }
+
+    // Attach listeners to simple inputs
+    const simpleInputs = ['in_name', 'in_email', 'in_phone', 'in_location', 'in_linkedin', 'in_github', 'in_portfolio'];
+    simpleInputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            updatePreview();
+            saveState();
+        });
+    });
+
+    // Attach Quill listeners
+    Object.keys(editors).forEach(key => {
+        editors[key].on('text-change', () => {
+            updatePreview();
+            saveState();
+        });
+    });
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+    });
+
+    // We rely on input/text-change events for saving. 
+    // beforeunload is redundant and can sometimes cause issues.
+</script>
+
+</body>
+</html>

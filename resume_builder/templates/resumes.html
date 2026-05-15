@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumes</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Resumes</h1>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Country</th>
+                    <th>GitHub</th>
+                    <th>LinkedIn</th>
+                    <th>Objective</th>
+                    <th>Education</th>
+                    <th>Work Experience</th>
+                    <th>Languages Known</th>
+                    <th>Technical Skills</th>
+                    <th>Achievements</th>
+                    <th>Virtual Internships</th>
+                    <th>Research Papers</th>
+                    <th>Projects</th>
+                    <th>Certifications</th>
+                    <th>Extracurricular Activities</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resume in resumes %}
+                <tr>
+                    <td>{{ resume.name }}</td>
+                    <td>{{ resume.email }}</td>
+                    <td>{{ resume.phone }}</td>
+                    <td>{{ resume.country }}</td>
+                    <td>{{ resume.github }}</td>
+                    <td>{{ resume.linkedin }}</td>
+                    <td>{{ resume.objective }}</td>
+                    <td>{{ resume.education }}</td>
+                    <td>{{ resume.work_experience }}</td>
+                    <td>{{ resume.languages }}</td>
+                    <td>{{ resume.skills }}</td>
+                    <td>{{ resume.achievements }}</td>
+                    <td>{{ resume.virtual_internships }}</td>
+                    <td>{{ resume.research_papers }}</td>
+                    <td>{{ resume.projects }}</td>
+                    <td>{{ resume.certifications }}</td>
+                    <td>{{ resume.extracurricular_activities }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder | Resumora</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #000000;
+            --primary-hover: #1a1a1a;
+            --bg-gray: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #fff;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .builder-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: calc(100vh - 4rem);
+            padding: 2rem 1.5rem;
+        }
+
+        .section-box {
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-box h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .entry-item {
+            border: 1px dashed var(--border-color);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            position: relative;
+            background: #f8fafc;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.25rem;
+            background: #fee2e2;
+            border-radius: 0.25rem;
+            border: none;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background: #f1f5f9;
+            border: 1px dashed var(--border-color);
+            border-radius: 0.4rem;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .step-dot {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .step-dot.active {
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-dot::after {
+            content: attr(data-step);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .form-step {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quill-editor {
+            height: 120px;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 0.4rem;
+        }
+
+        /* ── PREVIEW OVERLAY ── */
+        .preview-area {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #525659;
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 48px 20px 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .close-preview {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            background: white;
+            color: #ef4444;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 2100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        /*
+     * ── RESUME PAGE PREVIEW ──
+     * Mirrors the PDF output: Times New Roman, same sizing, same sections.
+     * One .resume-page = one A4 page (794px × 1123px at 96dpi).
+     */
+        .resume-page {
+            width: 794px;
+            min-height: 1123px;
+            background: white;
+            padding: 40px 48px 50px 48px;
+            color: #000;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .resume-page * {
+            font-family: 'Times New Roman', Times, serif !important;
+        }
+
+        /* ── Resume typography ── */
+        .r-name {
+            font-size: 24pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 4px;
+            line-height: 1.1;
+        }
+
+        .r-contact {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2px 10px;
+            font-size: 10pt;
+            margin-bottom: 12px;
+        }
+
+        .r-contact a {
+            color: #0000EE;
+            text-decoration: none;
+        }
+
+        .r-contact span {
+            color: #000;
+        }
+
+        .r-contact .sep {
+            color: #555;
+            margin: 0 3px;
+        }
+
+        .r-section {
+            margin-bottom: 0;
+            width: 100%;
+        }
+
+        .r-section-title {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1.5px solid #000;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            padding-bottom: 2px;
+            line-height: 1.1;
+        }
+
+        .r-sub-title {
+            font-size: 11pt;
+            font-style: italic;
+            font-weight: bold;
+            border-bottom: 1px dashed #000;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            padding-bottom: 1px;
+            line-height: 1.1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .r-content {
+            font-size: 11pt;
+            line-height: 1.25;
+            margin-top: 2px;
+        }
+
+        .r-content p {
+            margin: 1px 0;
+        }
+
+        .r-content ul {
+            padding-left: 18px;
+            margin: 1px 0;
+            list-style-type: disc;
+        }
+
+        .r-content li {
+            margin: 1px 0;
+        }
+
+        .r-content ol {
+            padding-left: 18px;
+            margin: 1px 0;
+        }
+
+        .r-entry {
+            margin-bottom: 5px;
+        }
+
+        .entry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 1px;
+        }
+
+        .entry-title {
+            font-weight: bold;
+            font-size: 12pt;
+            flex: 1;
+        }
+
+        .entry-date {
+            font-style: italic;
+            font-size: 11pt;
+            white-space: nowrap;
+        }
+
+        .entry-sub {
+            font-style: italic;
+            font-size: 11pt;
+            margin-top: 0px;
+        }
+
+        /* ── Buttons ── */
+        .btn-action {
+            padding: 12px;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-outline {
+            background: #f8fafc;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        @media (max-width: 860px) {
+            .builder-container {
+                padding: 1.5rem;
+            }
+
+            .resume-page {
+                width: 100%;
+                max-width: 700px;
+                padding: 28px 32px;
+            }
+
+            .r-section-title {
+                margin-top: 12px;
+                margin-bottom: 4px;
+            }
+
+            .r-content {
+                line-height: 1.2;
+            }
+
+            .r-entry {
+                margin-bottom: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .builder-container {
+                padding: 1rem;
+            }
+
+            .resume-page {
+                padding: 20px 24px;
+            }
+
+            .r-name {
+                font-size: 20pt;
+            }
+
+            .r-section-title {
+                font-size: 11pt;
+                margin-top: 10px;
+                margin-bottom: 3px;
+            }
+
+            .r-content {
+                font-size: 10pt;
+                line-height: 1.15;
+            }
+
+            .r-entry {
+                margin-bottom: 3px;
+            }
+
+            .entry-title {
+                font-size: 11pt;
+            }
+        }
+
+        @media print {
+            .preview-area {
+                background: white;
+                padding: 0;
+            }
+
+            .close-preview {
+                display: none;
+            }
+
+            .resume-page {
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+
+    <div class="builder-container">
+
+        <!-- Progress Bar -->
+        <div class="progress-container"
+            style="margin-bottom: 2rem; display: flex; justify-content: space-between; position: relative;">
+            <div
+                style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #e2e8f0; z-index: 1; transform: translateY(-50%);">
+            </div>
+            <div id="progressLine"
+                style="position: absolute; top: 50%; left: 0; width: 0%; height: 2px; background: var(--primary); z-index: 2; transform: translateY(-50%); transition: width 0.3s ease;">
+            </div>
+            <div class="step-dot active" data-step="1"
+                style="width:32px;height:32px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:3;font-weight:700;font-size:0.85rem;">
+                1</div>
+            <div class="step-dot" data-step="2"
+                style="width:32px;height:32px;background:white;color:var(--text-muted);border:2px solid #e2e8f0;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:3;font-weight:700;font-size:0.85rem;">
+                2</div>
+            <div class="step-dot" data-step="3"
+                style="width:32px;height:32px;background:white;color:var(--text-muted);border:2px solid #e2e8f0;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:3;font-weight:700;font-size:0.85rem;">
+                3</div>
+        </div>
+
+        <div id="resumeForm">
+            <!-- Step 1 -->
+            <div class="form-step active" id="step1">
+                <div class="section-box">
+                    <h2><i data-lucide="user"></i> Personal Details</h2>
+                    <div class="form-group">
+                        <label><i data-lucide="user" style="width:14px;height:14px;margin-right:4px;"></i> Full Name</label>
+                        <input type="text" id="in_name" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="mail" style="width:14px;height:14px;margin-right:4px;"></i> Email</label>
+                        <input type="email" id="in_email" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="phone" style="width:14px;height:14px;margin-right:4px;"></i> Phone</label>
+                        <input type="text" id="in_phone" placeholder="+91 99999 99999">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="map-pin" style="width:14px;height:14px;margin-right:4px;"></i> Location</label>
+                        <input type="text" id="in_location" placeholder="City, State">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-linkedin" style="color: #0077b5; margin-right: 4px;"></i> LinkedIn</label>
+                        <input type="text" id="in_linkedin" placeholder="LinkedIn URL">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-github" style="color: #333; margin-right: 4px;"></i> GitHub</label>
+                        <input type="text" id="in_github" placeholder="GitHub URL">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-globe" style="color: #0ea5e9; margin-right: 4px;"></i> Website / Portfolio</label>
+                        <input type="text" id="in_portfolio" placeholder="Portfolio URL">
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;">
+                    <button onclick="nextStep(2)" class="btn-action btn-primary" style="max-width:200px;">Next Step <i data-lucide="arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="form-step" id="step2" style="display:none;">
+                <div class="section-box">
+                    <h2><i data-lucide="file-edit"></i> Professional Summary / Objective</h2>
+                    <div id="editor_summary" class="quill-editor"></div>
+                </div>
+                <div class="section-box" id="sec_education">
+                    <h2><i data-lucide="graduation-cap"></i> Education</h2>
+                    <div id="education_entries"></div>
+                    <button class="add-btn" onclick="addEntry('education')">+ Add Education</button>
+                </div>
+                <div class="section-box">
+                    <h2><i data-lucide="cpu"></i> Technical Skills</h2>
+                    <div id="editor_tech_skills" class="quill-editor"></div>
+                    <h2 style="margin-top:1.5rem"><i data-lucide="users"></i> Non-Technical Skills</h2>
+                    <div id="editor_non_tech_skills" class="quill-editor"></div>
+                </div>
+                <div style="display:flex;gap:1rem;">
+                    <button onclick="nextStep(1)" class="btn-action btn-outline"><i data-lucide="arrow-left"></i>
+                        Back</button>
+                    <button onclick="nextStep(3)" class="btn-action btn-primary">Next Step <i
+                            data-lucide="arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="form-step" id="step3" style="display:none;">
+                <div class="section-box" id="sec_experience">
+                    <h2><i data-lucide="briefcase"></i> Experience</h2>
+                    <div id="experience_entries"></div>
+                    <button class="add-btn" onclick="addEntry('experience')">+ Add Experience</button>
+                </div>
+                <div class="section-box" id="sec_projects">
+                    <h2><i data-lucide="code"></i> Projects</h2>
+                    <div id="projects_entries"></div>
+                    <button class="add-btn" onclick="addEntry('projects')">+ Add Project</button>
+                </div>
+                <div class="section-box">
+                    <h2><i data-lucide="award"></i> Certifications</h2>
+                    <div id="editor_certs" class="quill-editor"></div>
+                    <h2 style="margin-top:1.5rem"><i data-lucide="book-open"></i> Publications (Research Papers)</h2>
+                    <div id="editor_research" class="quill-editor"></div>
+                    <h2 style="margin-top:1.5rem"><i data-lucide="trophy"></i> Honors & Awards</h2>
+                    <div id="editor_awards" class="quill-editor"></div>
+                    <h2 style="margin-top:1.5rem"><i data-lucide="star"></i> Extracurricular Activities</h2>
+                    <div id="editor_extracurricular" class="quill-editor"></div>
+                </div>
+                <div style="display:flex;gap:1rem;margin-bottom:4rem;">
+                    <button onclick="nextStep(2)" class="btn-action btn-outline"><i data-lucide="arrow-left"></i>
+                        Back</button>
+                    <button onclick="togglePreview(true)" class="btn-action btn-outline"><i data-lucide="eye"></i>
+                        Preview</button>
+                    <button onclick="saveAndDownload(event)" class="btn-action btn-primary"><i
+                            data-lucide="download"></i>
+                        Download PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PREVIEW OVERLAY ── -->
+    <div class="preview-area" id="previewArea">
+        <button class="close-preview" onclick="togglePreview(false)"><i data-lucide="x"
+                style="width:14px;height:14px;"></i> Close</button>
+        <div id="pagesContainer"></div>
+    </div>
+
+    <footer
+        style="padding:2rem;background:var(--bg-gray);border-top:1px solid var(--border-color);text-align:center;color:var(--text-muted);font-size:0.9rem;margin-top:auto;">
+        <p>&copy; 2026 Resumora. All rights reserved.</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        const quillOptions = {
+            theme: 'snow',
+            modules: { toolbar: [['bold', 'italic', 'underline'], ['link'], [{ 'list': 'bullet' }], ['clean']] }
+        };
+
+        const editors = {
+            summary: new Quill('#editor_summary', quillOptions),
+            tech_skills: new Quill('#editor_tech_skills', quillOptions),
+            non_tech_skills: new Quill('#editor_non_tech_skills', quillOptions),
+            certs: new Quill('#editor_certs', quillOptions),
+            research: new Quill('#editor_research', quillOptions),
+            awards: new Quill('#editor_awards', quillOptions),
+            extracurricular: new Quill('#editor_extracurricular', quillOptions)
+        };
+
+        function validateStep(currentStep) {
+            if (currentStep === 1) {
+                const name = document.getElementById('in_name').value.trim();
+                const email = document.getElementById('in_email').value.trim();
+                if (!name || !email) {
+                    alert('Please complete your Name and Email to proceed.');
+                    return false;
+                }
+            }
+            if (currentStep === 2) {
+                const summary = getCleanHTML(editors.summary);
+                if (!hasContent(summary)) {
+                    alert('Please add a Professional Summary to proceed.');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function nextStep(step) {
+            const current = parseInt(localStorage.getItem('currentStep') || '1');
+            
+            // Only validate when moving forward
+            if (step > current) {
+                if (!validateStep(current)) return;
+            }
+
+            document.querySelectorAll('.form-step').forEach(s => s.style.display = 'none');
+            document.getElementById(`step${step}`).style.display = 'block';
+            document.querySelectorAll('.step-dot').forEach(dot => {
+                const s = parseInt(dot.dataset.step);
+                if (s <= step) {
+                    dot.style.background = 'var(--primary)'; dot.style.color = 'white'; dot.style.borderColor = 'var(--primary)';
+                } else {
+                    dot.style.background = 'white'; dot.style.color = 'var(--text-muted)'; dot.style.borderColor = '#e2e8f0';
+                }
+            });
+            document.getElementById('progressLine').style.width = `${((step - 1) / 2) * 100}%`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            localStorage.setItem('currentStep', step);
+            lucide.createIcons();
+        }
+
+        const entryStore = { education: [], experience: [], projects: [] };
+
+        function addEntry(type, fields = null) {
+            const id = Math.floor(Date.now() + Math.random() * 10000);
+            const entry = { id, type, fields: fields || getDefaultFields(type) };
+            entryStore[type].push(entry);
+            renderEntryInputs(type, entry);
+        }
+
+        function getDefaultFields(type) {
+            if (type === 'education') return { institution: '', degree: '', dates: '', score: '' };
+            if (type === 'experience') return { company: '', role: '', dates: '', description: '' };
+            if (type === 'projects') return { name: '', link: '', description: '' };
+        }
+
+        function renderEntryInputs(type, entry) {
+            const container = document.getElementById(`${type}_entries`);
+            const div = document.createElement('div');
+            div.className = 'entry-item';
+            div.id = `entry_input_${entry.id}`;
+
+            let html = `<button class="remove-btn" onclick="removeEntry('${type}', ${entry.id})"><i data-lucide="trash-2" style="width:14px"></i></button>`;
+
+            if (type === 'education') {
+                html += `
+                    <div class="form-group"><label>Institution</label><input type="text" placeholder="e.g. Stanford University" value="${entry.fields.institution || ''}" oninput="updateField('${type}',${entry.id},'institution',this.value)" style="font-weight:700;"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+                        <div class="form-group"><label>Degree / Program</label><input type="text" placeholder="e.g. B.Tech CS" value="${entry.fields.degree || ''}" oninput="updateField('${type}',${entry.id},'degree',this.value)"></div>
+                        <div class="form-group"><label>Score / CGPA</label><input type="text" placeholder="e.g. 9.0" value="${entry.fields.score || ''}" oninput="updateField('${type}',${entry.id},'score',this.value)"></div>
+                    </div>
+                    <div class="form-group"><label>Dates</label><input type="text" placeholder="e.g. 2020 – 2024" value="${entry.fields.dates || ''}" oninput="updateField('${type}',${entry.id},'dates',this.value)"></div>
+                `;
+                div.innerHTML = html;
+                container.appendChild(div);
+            } else if (type === 'experience') {
+                html += `
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+                        <div class="form-group"><label>Company</label><input type="text" placeholder="e.g. Google" value="${entry.fields.company || ''}" oninput="updateField('${type}',${entry.id},'company',this.value)" style="font-weight:700"></div>
+                        <div class="form-group"><label>Dates</label><input type="text" placeholder="e.g. Jan 2022 - Present" value="${entry.fields.dates || ''}" oninput="updateField('${type}',${entry.id},'dates',this.value)"></div>
+                    </div>
+                    <div class="form-group"><label>Role / Title</label><input type="text" placeholder="e.g. Software Engineer" value="${entry.fields.role || ''}" oninput="updateField('${type}',${entry.id},'role',this.value)" style="margin-bottom:0.75rem"></div>
+                    <div class="form-group"><label>Description</label><div id="desc_${entry.id}" class="quill-editor" style="height:100px; margin-bottom: 1rem;"></div></div>
+                `;
+                div.innerHTML = html;
+                container.appendChild(div);
+                const editor = new Quill(`#desc_${entry.id}`, quillOptions);
+                editor.root.innerHTML = entry.fields.description || '';
+                editor.on('text-change', () => updateField(type, entry.id, 'description', editor.root.innerHTML));
+            } else if (type === 'projects') {
+                html += `
+                    <div class="form-group"><label>Project Name</label><input type="text" placeholder="e.g. E-commerce App" value="${entry.fields.name || ''}" oninput="updateField('${type}',${entry.id},'name',this.value)" style="font-weight:700;"></div>
+                    <div class="form-group"><label>Project Link (Optional)</label><input type="text" placeholder="e.g. https://github.com/..." value="${entry.fields.link || ''}" oninput="updateField('${type}',${entry.id},'link',this.value)" style="margin-bottom:0.75rem"></div>
+                    <div class="form-group"><label>Description</label><div id="desc_${entry.id}" class="quill-editor" style="height:100px; margin-bottom: 1rem;"></div></div>
+                `;
+                div.innerHTML = html;
+                container.appendChild(div);
+                const editor = new Quill(`#desc_${entry.id}`, quillOptions);
+                editor.root.innerHTML = entry.fields.description || '';
+                editor.on('text-change', () => updateField(type, entry.id, 'description', editor.root.innerHTML));
+            }
+
+            lucide.createIcons();
+        }
+
+        function updateField(type, id, field, value) {
+            const entry = entryStore[type].find(e => e.id === id);
+            if (entry) entry.fields[field] = value;
+        }
+
+        function removeEntry(type, id) {
+            entryStore[type] = entryStore[type].filter(e => e.id !== id);
+            const el = document.getElementById(`entry_input_${id}`);
+            if (el) el.remove();
+        }
+
+        function getCleanHTML(editor) {
+            if (!editor || !editor.root) return '';
+            const html = editor.root.innerHTML;
+            return (html === '<p><br></p>' || html.trim() === '') ? '' : html;
+        }
+
+        function hasContent(html) {
+            if (!html) return false;
+            const stripped = html.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, '').trim();
+            return stripped.length > 0;
+        }
+
+        function togglePreview(show) {
+            const area = document.getElementById('previewArea');
+            area.style.display = show ? 'flex' : 'none';
+            if (show) { buildPreview(); lucide.createIcons(); }
+        }
+
+        // ─────────────────────────────────────────────
+        //  PREVIEW BUILDER — mirrors PDF layout exactly
+        // ─────────────────────────────────────────────
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function quillToPreviewHtml(html) {
+            // Convert Quill HTML to clean preview HTML, preserving bullets & formatting
+            if (!html || html === '<p><br></p>') return '';
+            // Quill uses <p>, <ul>, <li>, <strong>, <em>, <u>
+            // Keep them — the .r-content CSS handles display
+            return html;
+        }
+
+        function buildContactHTML(personal) {
+            const items = [];
+            if (personal.email) items.push(`<div class="contact-item"><i data-lucide="mail" style="width:11px;height:11px;"></i><a href="mailto:${escapeHtml(personal.email)}">${escapeHtml(personal.email)}</a></div>`);
+            if (personal.phone) items.push(`<div class="contact-item"><i data-lucide="phone" style="width:11px;height:11px;"></i><span>${escapeHtml(personal.phone)}</span></div>`);
+            if (personal.location) items.push(`<div class="contact-item"><i data-lucide="map-pin" style="width:11px;height:11px;"></i><span>${escapeHtml(personal.location)}</span></div>`);
+            
+            // For LinkedIn and GitHub, use official brand icons from Font Awesome for best appearance
+            if (personal.linkedin) items.push(`<div class="contact-item"><i class="fab fa-linkedin" style="font-size:11px; color:#0077b5;"></i><a href="${escapeHtml(personal.linkedin)}" target="_blank">LinkedIn</a></div>`);
+            if (personal.github) items.push(`<div class="contact-item"><i class="fab fa-github" style="font-size:11px; color:#333;"></i><a href="${escapeHtml(personal.github)}" target="_blank">GitHub</a></div>`);
+            if (personal.portfolio) items.push(`<div class="contact-item"><i class="fas fa-globe" style="font-size:11px; color:#0ea5e9;"></i><a href="${escapeHtml(personal.portfolio)}" target="_blank">Website</a></div>`);
+            
+            return items.join('<span class="sep"> | </span>');
+        }
+
+        function buildEducationHTML(eduList) {
+            if (!eduList || !eduList.length) return '';
+            let html = '<div class="r-section"><div class="r-section-title">Education</div>';
+            eduList.forEach(e => {
+                const inst = e.fields.institution || '';
+                const degree = e.fields.degree || '';
+                const dates = e.fields.dates || '';
+                const score = e.fields.score || '';
+                if (!inst && !degree) return;
+                html += '<div class="r-entry">';
+                if (inst) {
+                    html += `<div class="entry-row">
+                        <span class="entry-title">${escapeHtml(inst)}</span>
+                        ${dates ? `<span class="entry-date">${escapeHtml(dates)}</span>` : ''}
+                    </div>`;
+                }
+                if (degree) {
+                    let sub = escapeHtml(degree);
+                    if (score) sub += ` &nbsp;|&nbsp; ${escapeHtml(score)}`;
+                    html += `<div class="entry-sub">${sub}</div>`;
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function buildSkillsHTML(techHtml, nonTechHtml) {
+            const hasT = hasContent(techHtml);
+            const hasNT = hasContent(nonTechHtml);
+            if (!hasT && !hasNT) return '';
+            let html = '<div class="r-section"><div class="r-section-title">Skills Summary</div>';
+            if (hasT) {
+                html += `<div class="r-sub-title">Technical Skills</div>
+                         <div class="r-content">${quillToPreviewHtml(techHtml)}</div>`;
+            }
+            if (hasNT) {
+                html += `<div class="r-sub-title">Non-Technical Skills</div>
+                         <div class="r-content">${quillToPreviewHtml(nonTechHtml)}</div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function buildExperienceHTML(expList) {
+            if (!expList || !expList.length) return '';
+            let hasAny = expList.some(e => e.fields.company || e.fields.role);
+            if (!hasAny) return '';
+            let html = '<div class="r-section"><div class="r-section-title">Experience</div>';
+            expList.forEach(e => {
+                const company = e.fields.company || '';
+                const role = e.fields.role || '';
+                const dates = e.fields.dates || '';
+                const desc = e.fields.description || '';
+                if (!company && !role) return;
+                html += '<div class="r-entry">';
+                if (company) {
+                    html += `<div class="entry-row">
+                        <span class="entry-title">${escapeHtml(company)}</span>
+                        ${dates ? `<span class="entry-date">${escapeHtml(dates)}</span>` : ''}
+                    </div>`;
+                }
+                if (role) html += `<div class="entry-sub">${escapeHtml(role)}</div>`;
+                if (hasContent(desc)) html += `<div class="r-content" style="margin-top:3px;">${quillToPreviewHtml(desc)}</div>`;
+                html += '</div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function buildProjectsHTML(projList) {
+            if (!projList || !projList.length) return '';
+            let hasAny = projList.some(e => e.fields.name || hasContent(e.fields.description));
+            if (!hasAny) return '';
+            let html = '<div class="r-section"><div class="r-section-title">Projects</div>';
+            projList.forEach(e => {
+                const name = e.fields.name || '';
+                const link = e.fields.link || '';
+                const desc = e.fields.description || '';
+                if (!name && !hasContent(desc)) return;
+                html += '<div class="r-entry">';
+                if (name) {
+                    if (link) {
+                        html += `<div class="entry-title"><a href="${escapeHtml(link)}" target="_blank" style="color:#000;text-decoration:none;">${escapeHtml(name)}</a></div>`;
+                    } else {
+                        html += `<div class="entry-title">${escapeHtml(name)}</div>`;
+                    }
+                }
+                if (hasContent(desc)) html += `<div class="r-content" style="margin-top:3px;">${quillToPreviewHtml(desc)}</div>`;
+                html += '</div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function buildRichSection(label, htmlContent) {
+            if (!hasContent(htmlContent)) return '';
+            return `<div class="r-section">
+                <div class="r-section-title">${label}</div>
+                <div class="r-content">${quillToPreviewHtml(htmlContent)}</div>
+            </div>`;
+        }
+
+        function buildPreview() {
+            const personal = {
+                name: document.getElementById('in_name').value || 'Your Name',
+                email: document.getElementById('in_email').value,
+                phone: document.getElementById('in_phone').value,
+                location: document.getElementById('in_location').value,
+                linkedin: document.getElementById('in_linkedin').value,
+                github: document.getElementById('in_github').value,
+                portfolio: document.getElementById('in_portfolio').value,
+            };
+
+            const summaryHtml = getCleanHTML(editors.summary);
+            const techHtml = getCleanHTML(editors.tech_skills);
+            const nonTechHtml = getCleanHTML(editors.non_tech_skills);
+            const certsHtml = getCleanHTML(editors.certs);
+            const researchHtml = getCleanHTML(editors.research);
+            const awardsHtml = getCleanHTML(editors.awards);
+            const extraHtml = getCleanHTML(editors.extracurricular);
+
+            let content = `
+                <div class="r-name">${escapeHtml(personal.name)}</div>
+                <div class="r-contact">${buildContactHTML(personal)}</div>
+            `;
+
+            if (hasContent(summaryHtml)) {
+                content += `<div class="r-section">
+                    <div class="r-section-title">Objective</div>
+                    <div class="r-content">${quillToPreviewHtml(summaryHtml)}</div>
+                </div>`;
+            }
+
+            content += buildEducationHTML(entryStore.education);
+            content += buildSkillsHTML(techHtml, nonTechHtml);
+            content += buildExperienceHTML(entryStore.experience);
+            content += buildProjectsHTML(entryStore.projects);
+            content += buildRichSection('Publications', researchHtml);
+            content += buildRichSection('Honors &amp; Awards', awardsHtml);
+            content += buildRichSection('Certifications', certsHtml);
+            content += buildRichSection('Extracurricular Activities', extraHtml);
+
+            // Wrap in a resume page
+            // We use a single page div — browser will overflow naturally and we
+            // can scroll. For multi-page simulation we split using JS after render.
+            const container = document.getElementById('pagesContainer');
+            container.innerHTML = `<div class="resume-page" id="resumeContent">${content}</div>`;
+
+            // After render, split into multiple pages if content overflows
+            setTimeout(() => splitIntoPages(), 50);
+        }
+
+        function splitIntoPages() {
+            const PAGE_HEIGHT_PX = 1123; // A4 at 96dpi
+            const PADDING_TOP = 48;
+            const PADDING_BOTTOM = 60;
+            const USABLE_HEIGHT = PAGE_HEIGHT_PX - PADDING_TOP - PADDING_BOTTOM;
+
+            const page = document.getElementById('resumeContent');
+            if (!page) return;
+
+            const totalHeight = page.scrollHeight;
+            if (totalHeight <= PAGE_HEIGHT_PX) return; // fits in one page
+
+            // Get all direct section children and split them across pages
+            const container = document.getElementById('pagesContainer');
+            const sections = Array.from(page.querySelectorAll('.r-section, .r-name, .r-contact'));
+
+            if (!sections.length) return;
+
+            // Clone the page structure and redistribute
+            let pages = [];
+            let currentPageContent = '';
+            let currentHeight = 0;
+
+            // Re-measure each section's height
+            sections.forEach(sec => {
+                const secHeight = sec.getBoundingClientRect().height + 12; // +12 for margins
+                if (currentHeight + secHeight > USABLE_HEIGHT && currentPageContent) {
+                    pages.push(currentPageContent);
+                    currentPageContent = sec.outerHTML;
+                    currentHeight = secHeight;
+                } else {
+                    currentPageContent += sec.outerHTML;
+                    currentHeight += secHeight;
+                }
+            });
+            if (currentPageContent) pages.push(currentPageContent);
+
+            if (pages.length <= 1) return; // no need to split
+
+            // Rebuild container with multiple pages
+            container.innerHTML = '';
+            pages.forEach((pageContent, i) => {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'resume-page';
+                pageDiv.innerHTML = pageContent;
+                container.appendChild(pageDiv);
+                if (i < pages.length - 1) {
+                    // Page number indicator
+                    const label = document.createElement('div');
+                    label.style.cssText = 'text-align:center;color:#ccc;font-size:11px;padding:6px 0;font-family:sans-serif;';
+                    label.textContent = `— Page ${i + 1} of ${pages.length} —`;
+                    container.appendChild(label);
+                }
+            });
+        }
+
+        // ─────────────────────────────────────────────
+        //  SAVE & DOWNLOAD
+        // ─────────────────────────────────────────────
+
+        const currentResumeId = "{{ resume_id or '' }}";
+
+        async function saveAndDownload(event) {
+            const data = {
+                resume_id: currentResumeId,
+                personal_details: {
+                    name: document.getElementById('in_name').value,
+                    email: document.getElementById('in_email').value,
+                    phone: document.getElementById('in_phone').value,
+                    location: document.getElementById('in_location').value,
+                    linkedin: document.getElementById('in_linkedin').value,
+                    github: document.getElementById('in_github').value,
+                    portfolio: document.getElementById('in_portfolio').value
+                },
+                professional_details: {
+                    summary: getCleanHTML(editors.summary),
+                    technical_skills: getCleanHTML(editors.tech_skills),
+                    non_technical_skills: getCleanHTML(editors.non_tech_skills),
+                    education: entryStore.education.map(e => e.fields).filter(f => f.institution || f.degree),
+                    work_experience: entryStore.experience.map(e => e.fields).filter(f => f.company || f.role),
+                    projects: entryStore.projects.map(e => e.fields).filter(f => f.name || f.description),
+                    certifications: getCleanHTML(editors.certs),
+                    research_papers: getCleanHTML(editors.research),
+                    achievements: getCleanHTML(editors.awards),
+                    extracurricular_activities: getCleanHTML(editors.extracurricular)
+                }
+            };
+
+            if (!data.personal_details.name || !data.personal_details.email) {
+                alert('Please provide at least Name and Email');
+                return;
+            }
+
+            try {
+                // 1. Save data to backend
+                const saveRes = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (saveRes.ok) {
+                    const saveJson = await saveRes.json();
+                    if (saveJson.resume_id) {
+                        // Update current ID if it was a new resume
+                        window.history.replaceState(null, '', `/builder/${saveJson.resume_id}`);
+                        // Update local variable for subsequent saves in same session
+                        // (Note: window.currentResumeId or similar would be better, but we'll use a trick)
+                        document.location.reload(); // Simplest way to refresh with new ID context
+                        return;
+                    }
+                } else {
+                    console.warn('Backend save failed, but proceeding with PDF generation.');
+                }
+
+                // 2. Build the preview in the hidden container
+                buildPreview();
+
+                // 3. Generate PDF using Backend
+                const btn = event ? event.currentTarget : null;
+                const originalHtml = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                    btn.disabled = true;
+                }
+
+                const pdfRes = await fetch('/download-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (pdfRes.ok) {
+                    const blob = await pdfRes.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${data.personal_details.name.replace(/ /g, '_')}_Resume.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    if (btn) {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                    localStorage.removeItem('currentStep');
+                    window.location.href = '/thank-you';
+                } else {
+                    const errorText = await pdfRes.text();
+                    console.error('PDF Generation Error:', errorText);
+                    alert('Error generating PDF on backend: ' + errorText);
+                    if (btn) {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert('Connection error');
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  AUTO-LOAD RESUME
+        // ─────────────────────────────────────────────
+
+        window.onload = async () => {
+            // Restore step
+            const savedStep = localStorage.getItem('currentStep');
+            if (savedStep) {
+                nextStep(parseInt(savedStep));
+            }
+
+            try {
+                // If editing specific resume, load that. Else load last saved.
+                const url = currentResumeId ? `/get_resume/${currentResumeId}` : '/last_resume';
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.personal_details) {
+                        document.getElementById('in_name').value = data.personal_details.name || '';
+                        document.getElementById('in_email').value = data.personal_details.email || '';
+                        document.getElementById('in_phone').value = data.personal_details.phone || '';
+                        document.getElementById('in_location').value = data.personal_details.location || '';
+                        document.getElementById('in_linkedin').value = data.personal_details.linkedin || '';
+                        document.getElementById('in_github').value = data.personal_details.github || '';
+                        document.getElementById('in_portfolio').value = data.personal_details.portfolio || '';
+
+                        if (data.professional_details) {
+                            const pd = data.professional_details;
+                            if (editors.summary) editors.summary.root.innerHTML = pd.summary || '';
+                            if (editors.tech_skills) editors.tech_skills.root.innerHTML = pd.technical_skills || '';
+                            if (editors.non_tech_skills) editors.non_tech_skills.root.innerHTML = pd.non_technical_skills || '';
+                            if (editors.certs) editors.certs.root.innerHTML = pd.certifications || '';
+                            if (editors.research) editors.research.root.innerHTML = pd.research_papers || '';
+                            if (editors.awards) editors.awards.root.innerHTML = pd.achievements || '';
+                            if (editors.extracurricular) editors.extracurricular.root.innerHTML = pd.extracurricular_activities || '';
+
+                            (pd.education || []).forEach(f => addEntry('education', { ...getDefaultFields('education'), ...f }));
+                            (pd.work_experience || []).forEach(f => addEntry('experience', { ...getDefaultFields('experience'), ...f }));
+                            (pd.projects || []).forEach(f => addEntry('projects', { ...getDefaultFields('projects'), ...f }));
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load last resume:', e);
+            }
+        };
+    </script>
+</body>
+
+</html>

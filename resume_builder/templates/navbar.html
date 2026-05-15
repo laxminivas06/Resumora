@@ -1,0 +1,116 @@
+<style>
+    .main-nav {
+        background: white;
+        padding: 0.75rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        width: 100%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #000000;
+        text-decoration: none;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .nav-link {
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .nav-link:hover {
+        color: #000000;
+    }
+
+    .nav-link.active {
+        color: #000000;
+    }
+
+    .nav-user {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-left: 1.5rem;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .btn-logout-nav {
+        color: #ef4444;
+        background: #fee2e2;
+        padding: 0.4rem;
+        border-radius: 0.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-logout-nav:hover {
+        background: #fecaca;
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+        .main-nav { padding: 0.75rem 1rem; }
+        .nav-links { gap: 1rem; }
+        .nav-link span { display: none; }
+        .nav-user { padding-left: 1rem; }
+    }
+</style>
+
+<nav class="main-nav">
+    <a href="/" class="nav-logo">
+        <i data-lucide="file-text"></i>
+        <span>Resumora</span>
+    </a>
+    <div class="nav-links">
+
+        {% if session.get('user_email') %}
+        <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">
+            <i data-lucide="layout-dashboard" style="width: 18px;"></i>
+            <span>Dashboard</span>
+        </a>
+        <div class="nav-user">
+            <div style="text-align: right; display: flex; flex-direction: column;">
+                <span style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">{{ session.get('user_name', 'User') }}</span>
+            </div>
+            <a href="/logout" class="btn-logout-nav" title="Logout">
+                <i data-lucide="log-out" style="width: 18px;"></i>
+            </a>
+        </div>
+        {% else %}
+        <a href="{% if request.path == '/' %}javascript:void(0){% else %}/?login=1{% endif %}" class="nav-link" {% if request.path == '/' %}onclick="openAuthModal('login')"{% endif %}>
+            <i data-lucide="log-in" style="width: 18px;"></i>
+            <span>Login</span>
+        </a>
+        {% endif %}
+    </div>
+</nav>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
