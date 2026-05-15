@@ -1,0 +1,9 @@
+flask
+requests
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+pymongo[srv]
+playwright
+python-dotenv
+gunicorn
