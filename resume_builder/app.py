@@ -11,10 +11,6 @@ import constants
 import textwrap
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_auth_requests
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
 import uuid
 import csv
 from pymongo import MongoClient
@@ -22,11 +18,13 @@ import gridfs
 import base64
 from playwright.sync_api import sync_playwright
 from bson.objectid import ObjectId
-import os
 from dotenv import load_dotenv
+import certifi
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from the same directory as this file
+from pathlib import Path
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 
 # Initialize Flask app
@@ -42,6 +40,10 @@ logger = logging.getLogger(__name__)
 file_handler = logging.FileHandler('data/error.log')
 file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(file_handler)
+@app.after_request
+def add_header(response):
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+    return response
 
 # Constants
 JSON_FILE_PATH = 'data/resumes.json'
@@ -50,17 +52,17 @@ PDF_DIR = 'data/pdfs'
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin@resumora.com')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Email Config
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
-SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
 
 # MongoDB Config
 MONGO_URI = os.environ.get("MONGO_URI")
-client = MongoClient(MONGO_URI)
+# Standard Atlas connection configuration
+client = MongoClient(
+    MONGO_URI,
+    tlsCAFile=certifi.where(),
+    serverSelectionTimeoutMS=5000
+)
 # MongoDB Collections
 db = client['resume_builder']
 resumes_col = db['resumes']
@@ -112,8 +114,8 @@ def migrate_data():
     except Exception as e:
         logger.error(f"Migration error: {e}")
 
-# Run migration
-migrate_data()
+# Run migration if needed (comment out after first successful run)
+# migrate_data()
 
 def track_stat(stat_key):
     """Track daily statistics in MongoDB with graceful failure"""
@@ -238,7 +240,7 @@ def run_in_background(f, *args, **kwargs):
 def index():
     """Welcome / Landing page"""
     track_stat("visits")
-    return render_template('welcome.html')
+    return render_template('welcome.html', google_client_id=GOOGLE_CLIENT_ID)
 
 @app.route('/dashboard')
 def dashboard():

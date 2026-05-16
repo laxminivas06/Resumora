@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Resume</title>
@@ -8,6 +9,7 @@
             size: A4;
             margin: 15mm 18mm;
         }
+
         body {
             margin: 0;
             padding: 0;
@@ -16,10 +18,12 @@
             font-family: 'Times New Roman', Times, serif;
             line-height: 1.2;
         }
+
         .resume-page {
             background: white;
             word-wrap: break-word;
         }
+
         .r-name {
             font-size: 24pt;
             font-weight: bold;
@@ -27,42 +31,50 @@
             margin-bottom: 4pt;
             line-height: 1.1;
         }
+
         .r-contact {
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 4pt 12pt;
+            flex-wrap: nowrap;
+            gap: 12pt;
             font-size: 10pt;
-            margin-bottom: 12pt;
-            padding-bottom: 4pt;
+            margin-bottom: 8pt;
+            padding-bottom: 2pt;
+            width: 100%;
         }
+
         .r-contact a {
             color: #0000EE;
             text-decoration: none;
         }
+
         .r-contact span {
             color: #000;
         }
+
         .r-contact .sep {
             display: none;
         }
+
         .r-section {
             margin-bottom: 8pt;
             width: 100%;
             page-break-inside: auto;
         }
+
         .r-section-title {
             font-size: 13pt;
             font-weight: bold;
             text-transform: uppercase;
             border-bottom: 0.5pt solid #444;
-            margin-top: 12pt;
-            margin-bottom: 6pt;
-            padding-bottom: 2pt;
+            margin-top: 6pt;
+            margin-bottom: 4pt;
+            padding-bottom: 1pt;
             line-height: 1.1;
             page-break-after: avoid;
         }
+
         .r-sub-title {
             font-size: 11pt;
             font-style: italic;
@@ -76,30 +88,37 @@
             align-items: center;
             gap: 6pt;
         }
+
         .r-content {
             font-size: 11pt;
             line-height: 1.25;
             margin-top: 2pt;
         }
+
         .r-content p {
             margin: 1pt 0;
         }
+
         .r-content ul {
             padding-left: 18pt;
             margin: 1pt 0;
             list-style-type: disc;
         }
+
         .r-content li {
             margin: 1pt 0;
         }
+
         .r-content ol {
             padding-left: 18pt;
             margin: 1pt 0;
         }
+
         .r-entry {
             margin-bottom: 6pt;
             page-break-inside: avoid;
         }
+
         .entry-row {
             display: flex;
             justify-content: space-between;
@@ -107,26 +126,32 @@
             gap: 6pt;
             margin-bottom: 1pt;
         }
+
         .entry-title {
             font-weight: bold;
             font-size: 12pt;
             flex: 1;
         }
+
         .entry-date {
             font-style: italic;
             font-size: 11pt;
             white-space: nowrap;
         }
+
         .entry-sub {
             font-style: italic;
             font-size: 11pt;
             margin-top: 0pt;
         }
+
         .contact-item {
             display: inline-flex;
             align-items: center;
-            gap: 4pt;
+            gap: 2pt;
+            white-space: nowrap;
         }
+
         .contact-icon {
             width: 11pt;
             height: 11pt;
@@ -134,159 +159,165 @@
         }
     </style>
 </head>
+
 <body>
     <div class="resume-page">
         <div class="r-name">{{ personal.name }}</div>
-        
+
         <div class="r-contact">
             {% if personal.email %}
-                <div class="contact-item">
-                    {% if icons.email %}<img src="data:image/png;base64,{{ icons.email }}" class="contact-icon">{% endif %}
-                    <a href="mailto:{{ personal.email }}">{{ personal.email }}</a>
-                </div>
+            <div class="contact-item">
+                {% if icons.email %}<img src="data:image/png;base64,{{ icons.email }}" class="contact-icon">{% endif %}
+                <a href="mailto:{{ personal.email }}">{{ personal.email }}</a>
+            </div>
             {% endif %}
-            
+
             {% if personal.phone %}
-                <div class="contact-item">
-                    {% if icons.phone %}<img src="data:image/png;base64,{{ icons.phone }}" class="contact-icon">{% endif %}
-                    <span>{{ personal.phone }}</span>
-                </div>
+            <div class="contact-item">
+                {% if icons.phone %}<img src="data:image/png;base64,{{ icons.phone }}" class="contact-icon">{% endif %}
+                <span>{{ personal.phone }}</span>
+            </div>
             {% endif %}
-            
+
             {% if personal.location %}
-                <div class="contact-item">
-                    {% if icons.location %}<img src="data:image/png;base64,{{ icons.location }}" class="contact-icon">{% endif %}
-                    <span>{{ personal.location }}</span>
-                </div>
+            <div class="contact-item">
+                {% if icons.location %}<img src="data:image/png;base64,{{ icons.location }}" class="contact-icon">{%
+                endif %}
+                <span>{{ personal.location }}</span>
+            </div>
             {% endif %}
-            
+
             {% if personal.linkedin %}
-                <div class="contact-item">
-                    <svg class="contact-icon" viewBox="0 0 24 24" fill="#0077b5"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                    <a href="{{ personal.linkedin }}">LinkedIn</a>
-                </div>
+            <div class="contact-item">
+                {% if icons.linkedin %}<img src="data:image/png;base64,{{ icons.linkedin }}" class="contact-icon">{%
+                endif %}
+                <a href="{{ personal.linkedin }}">LinkedIn</a>
+            </div>
             {% endif %}
-            
+
             {% if personal.github %}
-                <div class="contact-item">
-                    <svg class="contact-icon" viewBox="0 0 24 24" fill="#333"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.744.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    <a href="{{ personal.github }}">GitHub</a>
-                </div>
+            <div class="contact-item">
+                {% if icons.github %}<img src="data:image/png;base64,{{ icons.github }}" class="contact-icon">{% endif
+                %}
+                <a href="{{ personal.github }}">GitHub</a>
+            </div>
             {% endif %}
-            
+
             {% if personal.portfolio %}
-                <div class="contact-item">
-                    <svg class="contact-icon" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 18h-2v-3.5h2v3.5zm0-4.5h-2v-7h2v7z"/></svg>
-                    <a href="{{ personal.portfolio }}">Website</a>
-                </div>
+            <div class="contact-item">
+                {% if icons.website %}<img src="data:image/png;base64,{{ icons.website }}" class="contact-icon">{% endif
+                %}
+                <a href="{{ personal.portfolio }}">Website</a>
+            </div>
             {% endif %}
         </div>
 
         {% if prof.summary %}
-            <div class="r-section">
-                <div class="r-section-title">Objective</div>
-                <div class="r-content">{{ prof.summary | safe }}</div>
-            </div>
+        <div class="r-section">
+            <div class="r-section-title">Objective</div>
+            <div class="r-content">{{ prof.summary | safe }}</div>
+        </div>
         {% endif %}
 
         {% if prof.education %}
-            <div class="r-section">
-                <div class="r-section-title">Education</div>
-                {% for edu in prof.education %}
-                    <div class="r-entry">
-                        <div class="entry-row">
-                            <span class="entry-title">{{ edu.institution }}</span>
-                            {% if edu.dates %}<span class="entry-date">{{ edu.dates }}</span>{% endif %}
-                        </div>
-                        <div class="entry-sub">
-                            {{ edu.degree }}{% if edu.score %} &nbsp;|&nbsp; {{ edu.score }}{% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
+        <div class="r-section">
+            <div class="r-section-title">Education</div>
+            {% for edu in prof.education %}
+            <div class="r-entry">
+                <div class="entry-row">
+                    <span class="entry-title">{{ edu.institution }}</span>
+                    {% if edu.dates %}<span class="entry-date">{{ edu.dates }}</span>{% endif %}
+                </div>
+                <div class="entry-sub">
+                    {{ edu.degree }}{% if edu.score %} &nbsp;|&nbsp; {{ edu.score }}{% endif %}
+                </div>
             </div>
+            {% endfor %}
+        </div>
         {% endif %}
 
         {% if prof.technical_skills or prof.non_technical_skills %}
-            <div class="r-section">
-                <div class="r-section-title">Skills Summary</div>
-                {% if prof.technical_skills %}
-                    <div class="r-sub-title">Technical Skills</div>
-                    <div class="r-content">{{ prof.technical_skills | safe }}</div>
-                {% endif %}
-                {% if prof.non_technical_skills %}
-                    <div class="r-sub-title">Non-Technical Skills</div>
-                    <div class="r-content">{{ prof.non_technical_skills | safe }}</div>
-                {% endif %}
-            </div>
+        <div class="r-section">
+            <div class="r-section-title">Skills Summary</div>
+            {% if prof.technical_skills %}
+            <div class="r-sub-title">Technical Skills</div>
+            <div class="r-content">{{ prof.technical_skills | safe }}</div>
+            {% endif %}
+            {% if prof.non_technical_skills %}
+            <div class="r-sub-title">Non-Technical Skills</div>
+            <div class="r-content">{{ prof.non_technical_skills | safe }}</div>
+            {% endif %}
+        </div>
         {% endif %}
 
         {% if prof.work_experience %}
-            <div class="r-section">
-                <div class="r-section-title">Experience</div>
-                {% for exp in prof.work_experience %}
-                    <div class="r-entry">
-                        <div class="entry-row">
-                            <span class="entry-title">{{ exp.company }}</span>
-                            {% if exp.dates %}<span class="entry-date">{{ exp.dates }}</span>{% endif %}
-                        </div>
-                        <div class="entry-sub">{{ exp.role }}</div>
-                        {% if exp.description %}
-                            <div class="r-content" style="margin-top:3pt;">{{ exp.description | safe }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+        <div class="r-section">
+            <div class="r-section-title">Experience</div>
+            {% for exp in prof.work_experience %}
+            <div class="r-entry">
+                <div class="entry-row">
+                    <span class="entry-title">{{ exp.company }}</span>
+                    {% if exp.dates %}<span class="entry-date">{{ exp.dates }}</span>{% endif %}
+                </div>
+                <div class="entry-sub">{{ exp.role }}</div>
+                {% if exp.description %}
+                <div class="r-content" style="margin-top:3pt;">{{ exp.description | safe }}</div>
+                {% endif %}
             </div>
+            {% endfor %}
+        </div>
         {% endif %}
 
         {% if prof.projects %}
-            <div class="r-section">
-                <div class="r-section-title">Projects</div>
-                {% for proj in prof.projects %}
-                    <div class="r-entry">
-                        {% if proj.name %}
-                            <div class="entry-title">
-                                {% if proj.link %}
-                                    <a href="{{ proj.link }}" style="color:#000;text-decoration:none;">{{ proj.name }}</a>
-                                {% else %}
-                                    {{ proj.name }}
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        {% if proj.description %}
-                            <div class="r-content" style="margin-top:3pt;">{{ proj.description | safe }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+        <div class="r-section">
+            <div class="r-section-title">Projects</div>
+            {% for proj in prof.projects %}
+            <div class="r-entry">
+                {% if proj.name %}
+                <div class="entry-title">
+                    {% if proj.link %}
+                    <a href="{{ proj.link }}" style="color:#000;text-decoration:none;">{{ proj.name }}</a>
+                    {% else %}
+                    {{ proj.name }}
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if proj.description %}
+                <div class="r-content" style="margin-top:3pt;">{{ proj.description | safe }}</div>
+                {% endif %}
             </div>
+            {% endfor %}
+        </div>
         {% endif %}
 
         {% if prof.research_papers %}
-            <div class="r-section">
-                <div class="r-section-title">Publications</div>
-                <div class="r-content">{{ prof.research_papers | safe }}</div>
-            </div>
+        <div class="r-section">
+            <div class="r-section-title">Publications</div>
+            <div class="r-content">{{ prof.research_papers | safe }}</div>
+        </div>
         {% endif %}
 
         {% if prof.achievements %}
-            <div class="r-section">
-                <div class="r-section-title">Honors &amp; Awards</div>
-                <div class="r-content">{{ prof.achievements | safe }}</div>
-            </div>
+        <div class="r-section">
+            <div class="r-section-title">Honors &amp; Awards</div>
+            <div class="r-content">{{ prof.achievements | safe }}</div>
+        </div>
         {% endif %}
 
         {% if prof.certifications %}
-            <div class="r-section">
-                <div class="r-section-title">Certifications</div>
-                <div class="r-content">{{ prof.certifications | safe }}</div>
-            </div>
+        <div class="r-section">
+            <div class="r-section-title">Certifications</div>
+            <div class="r-content">{{ prof.certifications | safe }}</div>
+        </div>
         {% endif %}
 
         {% if prof.extracurricular_activities %}
-            <div class="r-section">
-                <div class="r-section-title">Extracurricular Activities</div>
-                <div class="r-content">{{ prof.extracurricular_activities | safe }}</div>
-            </div>
+        <div class="r-section">
+            <div class="r-section-title">Extracurricular Activities</div>
+            <div class="r-content">{{ prof.extracurricular_activities | safe }}</div>
+        </div>
         {% endif %}
     </div>
 </body>
+
 </html>
