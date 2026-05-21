@@ -212,111 +212,222 @@
             {% endif %}
         </div>
 
-        {% if prof.summary %}
-        <div class="r-section">
-            <div class="r-section-title">Objective</div>
-            <div class="r-content">{{ prof.summary | safe }}</div>
-        </div>
-        {% endif %}
+        {# ── Determine format mode and section order ── #}
+        {% set format_mode = prof.get('format_mode', 'default') %}
+        {% set default_order = [
+            'summary',
+            'education',
+            'skills',
+            'experience',
+            'projects',
+            'publications',
+            'awards',
+            'certs',
+            'extracurricular'
+        ] %}
 
-        {% if prof.education %}
-        <div class="r-section">
-            <div class="r-section-title">Education</div>
-            {% for edu in prof.education %}
-            <div class="r-entry">
-                <div class="entry-row">
-                    <span class="entry-title">{{ edu.institution }}</span>
-                    {% if edu.dates %}<span class="entry-date">{{ edu.dates }}</span>{% endif %}
-                </div>
-                <div class="entry-sub">
-                    {{ edu.degree }}{% if edu.score %} &nbsp;|&nbsp; {{ edu.score }}{% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+        {% set section_order = prof.get('section_order', default_order) if format_mode == 'custom' else default_order %}
+        {% set section_visibilities = prof.get('section_visibilities', {}) %}
+        {% set section_titles = prof.get('section_titles', {}) %}
 
-        {% if prof.technical_skills or prof.non_technical_skills %}
-        <div class="r-section">
-            <div class="r-section-title">Skills Summary</div>
-            {% if prof.technical_skills %}
-            <div class="r-sub-title">Technical Skills</div>
-            <div class="r-content">{{ prof.technical_skills | safe }}</div>
-            {% endif %}
-            {% if prof.non_technical_skills %}
-            <div class="r-sub-title">Non-Technical Skills</div>
-            <div class="r-content">{{ prof.non_technical_skills | safe }}</div>
-            {% endif %}
-        </div>
-        {% endif %}
+        {# ── Pre-build custom sections lookup map using namespace ── #}
+        {# We use a namespace dict approach: iterate custom_sections and build a list #}
+        {% set custom_list = prof.get('custom_sections', []) %}
 
-        {% if prof.work_experience %}
-        <div class="r-section">
-            <div class="r-section-title">Experience</div>
-            {% for exp in prof.work_experience %}
-            <div class="r-entry">
-                <div class="entry-row">
-                    <span class="entry-title">{{ exp.company }}</span>
-                    {% if exp.dates %}<span class="entry-date">{{ exp.dates }}</span>{% endif %}
-                </div>
-                <div class="entry-sub">{{ exp.role }}</div>
-                {% if exp.description %}
-                <div class="r-content" style="margin-top:3pt;">{{ exp.description | safe }}</div>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+        {# ── Render sections in order ── #}
+        {% for key in section_order %}
+            {% if format_mode == 'default' or section_visibilities.get(key, True) %}
 
-        {% if prof.projects %}
-        <div class="r-section">
-            <div class="r-section-title">Projects</div>
-            {% for proj in prof.projects %}
-            <div class="r-entry">
-                {% if proj.name %}
-                <div class="entry-title">
-                    {% if proj.link %}
-                    <a href="{{ proj.link }}" style="color:#000;text-decoration:none;">{{ proj.name }}</a>
-                    {% else %}
-                    {{ proj.name }}
+                {% if key == 'summary' %}
+                    {# ── Objective / Professional Summary ── #}
+                    {% set title = section_titles.get(key, 'Objective') if format_mode == 'custom' else 'Objective' %}
+                    {% if prof.summary %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        <div class="r-content">{{ prof.summary | safe }}</div>
+                    </div>
                     {% endif %}
-                </div>
+
+                {% elif key == 'education' %}
+                    {# ── Education ── #}
+                    {% set title = section_titles.get(key, 'Education') if format_mode == 'custom' else 'Education' %}
+                    {% if prof.education %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        {% for edu in prof.education %}
+                        <div class="r-entry">
+                            <div class="entry-row">
+                                <span class="entry-title">{{ edu.institution }}</span>
+                                {% if edu.dates %}<span class="entry-date">{{ edu.dates }}</span>{% endif %}
+                            </div>
+                            <div class="entry-sub">
+                                {{ edu.degree }}{% if edu.score %} &nbsp;|&nbsp; {{ edu.score }}{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'skills' %}
+                    {# ── Skills Summary ── #}
+                    {% set title = section_titles.get(key, 'Skills Summary') if format_mode == 'custom' else 'Skills Summary' %}
+                    {% if prof.technical_skills or prof.non_technical_skills %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        {% if prof.technical_skills %}
+                        <div class="r-sub-title">Technical Skills</div>
+                        <div class="r-content">{{ prof.technical_skills | safe }}</div>
+                        {% endif %}
+                        {% if prof.non_technical_skills %}
+                        <div class="r-sub-title">Non-Technical Skills</div>
+                        <div class="r-content">{{ prof.non_technical_skills | safe }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'experience' %}
+                    {# ── Work Experience ── #}
+                    {% set title = section_titles.get(key, 'Experience') if format_mode == 'custom' else 'Experience' %}
+                    {% if prof.work_experience %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        {% for exp in prof.work_experience %}
+                        <div class="r-entry">
+                            <div class="entry-row">
+                                <span class="entry-title">{{ exp.company }}</span>
+                                {% if exp.dates %}<span class="entry-date">{{ exp.dates }}</span>{% endif %}
+                            </div>
+                            <div class="entry-sub">{{ exp.role }}</div>
+                            {% if exp.description %}
+                            <div class="r-content" style="margin-top:3pt;">{{ exp.description | safe }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'projects' %}
+                    {# ── Projects ── #}
+                    {% set title = section_titles.get(key, 'Projects') if format_mode == 'custom' else 'Projects' %}
+                    {% if prof.projects %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        {% for proj in prof.projects %}
+                        <div class="r-entry">
+                            {% if proj.name %}
+                            <div class="entry-title">
+                                {% if proj.link %}
+                                <a href="{{ proj.link }}" style="color:#000;text-decoration:none;">{{ proj.name }}</a>
+                                {% else %}
+                                {{ proj.name }}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if proj.description %}
+                            <div class="r-content" style="margin-top:3pt;">{{ proj.description | safe }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'publications' %}
+                    {# ── Publications / Research Papers ── #}
+                    {% set title = section_titles.get(key, 'Publications') if format_mode == 'custom' else 'Publications' %}
+                    {% if prof.research_papers %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        <div class="r-content">{{ prof.research_papers | safe }}</div>
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'awards' %}
+                    {# ── Honors & Awards ── #}
+                    {% set title = section_titles.get(key, 'Honors & Awards') if format_mode == 'custom' else 'Honors & Awards' %}
+                    {% if prof.achievements %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        <div class="r-content">{{ prof.achievements | safe }}</div>
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'certs' %}
+                    {# ── Certifications ── #}
+                    {% set title = section_titles.get(key, 'Certifications') if format_mode == 'custom' else 'Certifications' %}
+                    {% if prof.certifications %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        <div class="r-content">{{ prof.certifications | safe }}</div>
+                    </div>
+                    {% endif %}
+
+                {% elif key == 'extracurricular' %}
+                    {# ── Extracurricular Activities ── #}
+                    {% set title = section_titles.get(key, 'Extracurricular Activities') if format_mode == 'custom' else 'Extracurricular Activities' %}
+                    {% if prof.extracurricular_activities %}
+                    <div class="r-section">
+                        <div class="r-section-title">{{ title }}</div>
+                        <div class="r-content">{{ prof.extracurricular_activities | safe }}</div>
+                    </div>
+                    {% endif %}
+
+                {% elif key.startswith('custom_') and format_mode == 'custom' %}
+                    {# ── Dynamic Custom Section — use namespace to escape loop scoping ── #}
+                    {% set ns = namespace(found=false, sec_name='', sec_type='', sec_content=none) %}
+                    {% for cs in custom_list %}
+                        {% if cs.id == key and not ns.found %}
+                            {% set ns.found = true %}
+                            {% set ns.sec_name = cs.name %}
+                            {% set ns.sec_type = cs.type %}
+                            {% set ns.sec_content = cs.content %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if ns.found %}
+                        {% set title = section_titles.get(key, ns.sec_name) %}
+
+                        {% if ns.sec_type == 'text' %}
+                            {# Text / Rich content section #}
+                            {% if ns.sec_content and ns.sec_content != '<p><br></p>' and ns.sec_content|length > 0 %}
+                            <div class="r-section">
+                                <div class="r-section-title">{{ title }}</div>
+                                <div class="r-content">{{ ns.sec_content | safe }}</div>
+                            </div>
+                            {% endif %}
+
+                        {% elif ns.sec_type == 'entries' %}
+                            {# Entry-based section #}
+                            {% if ns.sec_content and ns.sec_content|length > 0 %}
+                            <div class="r-section">
+                                <div class="r-section-title">{{ title }}</div>
+                                {% for entry in ns.sec_content %}
+                                    {% set ef = entry.get('fields', entry) %}
+                                    {% if ef.get('title') or ef.get('subtitle') or ef.get('description') %}
+                                    <div class="r-entry">
+                                        {% if ef.get('title') %}
+                                        <div class="entry-row">
+                                            <span class="entry-title">{{ ef.title }}</span>
+                                            {% if ef.get('dates') %}<span class="entry-date">{{ ef.dates }}</span>{% endif %}
+                                        </div>
+                                        {% endif %}
+                                        {% if ef.get('subtitle') %}
+                                        <div class="entry-sub">{{ ef.subtitle }}</div>
+                                        {% endif %}
+                                        {% if ef.get('description') and ef.description != '<p><br></p>' %}
+                                        <div class="r-content" style="margin-top:3pt;">{{ ef.description | safe }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+
                 {% endif %}
-                {% if proj.description %}
-                <div class="r-content" style="margin-top:3pt;">{{ proj.description | safe }}</div>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
 
-        {% if prof.research_papers %}
-        <div class="r-section">
-            <div class="r-section-title">Publications</div>
-            <div class="r-content">{{ prof.research_papers | safe }}</div>
-        </div>
-        {% endif %}
-
-        {% if prof.achievements %}
-        <div class="r-section">
-            <div class="r-section-title">Honors &amp; Awards</div>
-            <div class="r-content">{{ prof.achievements | safe }}</div>
-        </div>
-        {% endif %}
-
-        {% if prof.certifications %}
-        <div class="r-section">
-            <div class="r-section-title">Certifications</div>
-            <div class="r-content">{{ prof.certifications | safe }}</div>
-        </div>
-        {% endif %}
-
-        {% if prof.extracurricular_activities %}
-        <div class="r-section">
-            <div class="r-section-title">Extracurricular Activities</div>
-            <div class="r-content">{{ prof.extracurricular_activities | safe }}</div>
-        </div>
-        {% endif %}
+            {% endif %}
+        {% endfor %}
     </div>
 </body>
 

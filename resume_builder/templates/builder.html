@@ -464,6 +464,113 @@
                 min-height: auto;
             }
         }
+
+        /* ── FORMAT SWITCHER & DIALOG CSS ── */
+        .format-switcher-card label.active-format-btn {
+            background: #fff !important;
+            color: #000 !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            border-radius: 0.35rem;
+        }
+        
+        .format-switcher-card label {
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+        }
+        
+        .format-switcher-card label:hover {
+            color: #000;
+        }
+        
+        dialog::backdrop {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        dialog {
+            animation: modalFadeIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .custom-type-label.active-type {
+            border-color: var(--primary) !important;
+            background: #f8fafc;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+        }
+        
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.25rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-main);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        
+        .section-badge.hidden-badge {
+            opacity: 0.55;
+            background: #f1f5f9;
+            text-decoration: line-through;
+        }
+        
+        .reorder-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+            cursor: grab;
+        }
+        
+        .reorder-item:hover {
+            border-color: #a5b4fc;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+        }
+
+        .reorder-item.drag-over {
+            border-color: #6366f1;
+            background: #eef2ff;
+            box-shadow: 0 4px 16px rgba(99,102,241,0.18);
+        }
+
+        .reorder-item[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        .card-num-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            margin-right: 6px;
+            flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(99,102,241,0.3);
+        }
     </style>
 </head>
 
@@ -533,70 +640,185 @@
 
             <!-- Step 2 -->
             <div class="form-step" id="step2" style="display:none;">
-                <div class="section-box">
-                    <h2><i data-lucide="file-edit"></i> Professional Summary / Objective</h2>
-                    <div id="editor_summary" class="quill-editor"></div>
+                <!-- Premium Format Switcher UI Card -->
+                <div class="section-box format-switcher-card" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 1rem; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04); margin-bottom: 1.5rem; padding: 1.5rem; transition: all 0.3s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em;"><i data-lucide="layout" style="color: var(--primary);"></i> Resume Layout &amp; Formatting</h3>
+                            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Choose standard default layout or customize order and sections.</p>
+                        </div>
+                        <div style="display: inline-flex; background: #f1f5f9; padding: 0.25rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                            <label style="margin: 0; padding: 0.4rem 0.8rem; border-radius: 0.35rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s;" id="label_format_default" class="active-format-btn">
+                                <input type="radio" name="format_mode" value="default" checked style="display:none;" onchange="setFormatMode('default')"> Default
+                            </label>
+                            <label style="margin: 0; padding: 0.4rem 0.8rem; border-radius: 0.35rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s;" id="label_format_custom">
+                                <input type="radio" name="format_mode" value="custom" style="display:none;" onchange="setFormatMode('custom')"> Customized
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Customized Controls Bar -->
+                    <div id="customFormatControls" style="display: none; border-top: 1px solid #e2e8f0; padding-top: 1rem; animation: fadeIn 0.3s ease;">
+                        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; width: 100%;">
+                            <button type="button" onclick="openCustomizeModal()" class="btn-action btn-outline" style="max-width: 240px; padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 0.4rem; height: 36px; display: flex; align-items: center; gap: 0.4rem;">
+                                <i data-lucide="sliders"></i> Customize Sections &amp; Order
+                            </button>
+                            <button type="button" onclick="openAddSectionDirectly()" class="btn-action btn-outline" style="max-width: 200px; padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 0.4rem; height: 36px; display: flex; align-items: center; gap: 0.4rem; color: var(--primary); border-color: var(--primary); background: #f0fdf4;">
+                                <i data-lucide="plus-circle"></i> Add Custom Section
+                            </button>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-left: auto;">Sections status: <span style="color: var(--primary); font-weight: 700;">Customized Layout Active</span></span>
+                        </div>
+                        <!-- Ordered Badges List -->
+                        <div id="sectionOrderBadges" style="display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem 0.75rem; background: #f8fafc; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                            <!-- Badges will be injected here dynamically by JS -->
+                        </div>
+                    </div>
                 </div>
-                <div class="section-box" id="sec_education">
-                    <h2><i data-lucide="graduation-cap"></i> Education</h2>
-                    <div id="education_entries"></div>
-                    <button class="add-btn" onclick="addEntry('education')">+ Add Education</button>
+
+                <!-- Input cards container to support real-time physical reordering in DOM -->
+                <div id="builderCardsContainer" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Input cards -->
+                    <div class="section-box" id="card_summary">
+                        <h2><i data-lucide="file-edit"></i> <span id="card_title_label_summary">Professional Summary / Objective</span></h2>
+                        <div id="editor_summary" class="quill-editor"></div>
+                    </div>
+                    
+                    <div class="section-box" id="card_education">
+                        <h2><i data-lucide="graduation-cap"></i> <span id="card_title_label_education">Education</span></h2>
+                        <div id="education_entries"></div>
+                        <button type="button" class="add-btn" onclick="addEntry('education')">+ Add Education</button>
+                    </div>
+                    
+                    <div class="section-box" id="card_skills">
+                        <h2><i data-lucide="cpu"></i> <span id="card_title_label_skills">Technical Skills</span></h2>
+                        <div id="editor_tech_skills" class="quill-editor"></div>
+                        <h2 style="margin-top:1.5rem"><i data-lucide="users"></i> Non-Technical Skills</h2>
+                        <div id="editor_non_tech_skills" class="quill-editor"></div>
+                    </div>
+
+                    <div class="section-box" id="card_experience">
+                        <h2><i data-lucide="briefcase"></i> <span id="card_title_label_experience">Experience</span></h2>
+                        <div id="experience_entries"></div>
+                        <button type="button" class="add-btn" onclick="addEntry('experience')">+ Add Experience</button>
+                    </div>
+
+                    <div class="section-box" id="card_projects">
+                        <h2><i data-lucide="code"></i> <span id="card_title_label_projects">Projects</span></h2>
+                        <div id="projects_entries"></div>
+                        <button type="button" class="add-btn" onclick="addEntry('projects')">+ Add Project</button>
+                    </div>
+
+                    <div class="section-box" id="card_additional">
+                        <div id="sub_sec_certs">
+                            <h2><i data-lucide="award"></i> <span id="card_title_label_certs">Certifications</span></h2>
+                            <div id="editor_certs" class="quill-editor"></div>
+                        </div>
+                        <div id="sub_sec_publications">
+                            <h2 style="margin-top:1.5rem"><i data-lucide="book-open"></i> <span id="card_title_label_publications">Publications (Research Papers)</span></h2>
+                            <div id="editor_research" class="quill-editor"></div>
+                        </div>
+                        <div id="sub_sec_awards">
+                            <h2 style="margin-top:1.5rem"><i data-lucide="trophy"></i> <span id="card_title_label_awards">Honors &amp; Awards</span></h2>
+                            <div id="editor_awards" class="quill-editor"></div>
+                        </div>
+                        <div id="sub_sec_extracurricular">
+                            <h2 style="margin-top:1.5rem"><i data-lucide="star"></i> <span id="card_title_label_extracurricular">Extracurricular Activities</span></h2>
+                            <div id="editor_extracurricular" class="quill-editor"></div>
+                        </div>
+                    </div>
+
+                    <!-- Container for dynamic custom-added sections -->
+                    <div id="custom_sections_inputs" style="display: contents;"></div>
                 </div>
-                <div class="section-box">
-                    <h2><i data-lucide="cpu"></i> Technical Skills</h2>
-                    <div id="editor_tech_skills" class="quill-editor"></div>
-                    <h2 style="margin-top:1.5rem"><i data-lucide="users"></i> Non-Technical Skills</h2>
-                    <div id="editor_non_tech_skills" class="quill-editor"></div>
-                </div>
-                <div style="display:flex;gap:1rem;">
-                    <button onclick="nextStep(1)" class="btn-action btn-outline"><i data-lucide="arrow-left"></i>
-                        Back</button>
-                    <button onclick="nextStep(3)" class="btn-action btn-primary">Next Step <i
-                            data-lucide="arrow-right"></i></button>
+                
+                <div style="display:flex;gap:1rem;margin-top:2rem;">
+                    <button type="button" onclick="nextStep(1)" class="btn-action btn-outline"><i data-lucide="arrow-left"></i> Back</button>
+                    <button type="button" onclick="nextStep(3)" class="btn-action btn-primary">Next Step <i data-lucide="arrow-right"></i></button>
                 </div>
             </div>
 
             <!-- Step 3 -->
             <div class="form-step" id="step3" style="display:none;">
-                <div class="section-box" id="sec_experience">
-                    <h2><i data-lucide="briefcase"></i> Experience</h2>
-                    <div id="experience_entries"></div>
-                    <button class="add-btn" onclick="addEntry('experience')">+ Add Experience</button>
+                <!-- Step 3 Action Header -->
+                <div class="action-header section-box" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; position:sticky; top:0; z-index:100; background:rgba(255,255,255,0.95); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-radius:0.75rem; border:1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding:1rem 1.5rem; margin-bottom:1.5rem;">
+                    <div>
+                        <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:0.4rem;"><i data-lucide="check-circle" style="color:#10b981;"></i> Final Draft &amp; Submit</h3>
+                        <p style="font-size:0.78rem; color:var(--text-muted);">Verify your resume layout. Go back to editing if any corrections are needed.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <button type="button" onclick="nextStep(2)" class="btn-action btn-outline" style="padding: 0.5rem 1rem; font-size: 0.82rem; height: 38px; display:flex; align-items:center; gap:0.4rem; border-color:#cbd5e1; background:#fff;"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Edit Details</button>
+                        <button type="button" onclick="saveDraftOnly()" class="btn-action btn-outline" style="padding: 0.5rem 1rem; font-size: 0.82rem; height: 38px; display:flex; align-items:center; gap:0.4rem; border-color:#cbd5e1; background:#fff;"><i data-lucide="save" style="width:16px;height:16px;"></i> Save Draft</button>
+                        <button type="button" onclick="saveAndDownload(event)" class="btn-action btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.82rem; height: 38px; display:flex; align-items:center; gap:0.4rem; min-width:140px;"><i data-lucide="download" style="width:16px;height:16px;"></i> Download PDF</button>
+                    </div>
                 </div>
-                <div class="section-box" id="sec_projects">
-                    <h2><i data-lucide="code"></i> Projects</h2>
-                    <div id="projects_entries"></div>
-                    <button class="add-btn" onclick="addEntry('projects')">+ Add Project</button>
-                </div>
-                <div class="section-box">
-                    <h2><i data-lucide="award"></i> Certifications</h2>
-                    <div id="editor_certs" class="quill-editor"></div>
-                    <h2 style="margin-top:1.5rem"><i data-lucide="book-open"></i> Publications (Research Papers)</h2>
-                    <div id="editor_research" class="quill-editor"></div>
-                    <h2 style="margin-top:1.5rem"><i data-lucide="trophy"></i> Honors & Awards</h2>
-                    <div id="editor_awards" class="quill-editor"></div>
-                    <h2 style="margin-top:1.5rem"><i data-lucide="star"></i> Extracurricular Activities</h2>
-                    <div id="editor_extracurricular" class="quill-editor"></div>
-                </div>
-                <div style="display:flex;gap:1rem;margin-bottom:4rem;">
-                    <button onclick="nextStep(2)" class="btn-action btn-outline"><i data-lucide="arrow-left"></i>
-                        Back</button>
-                    <button onclick="togglePreview(true)" class="btn-action btn-outline"><i data-lucide="eye"></i>
-                        Preview</button>
-                    <button onclick="saveAndDownload(event)" class="btn-action btn-primary"><i
-                            data-lucide="download"></i>
-                        Download PDF</button>
+                
+                <!-- Live Preview Viewport Container -->
+                <div id="step3PreviewContainer" style="background:#525659; padding: 2.5rem 1rem; border-radius:0.75rem; display:flex; flex-direction:column; align-items:center; gap:1.5rem; min-height:600px; box-shadow:inset 0 2px 10px rgba(0,0,0,0.2); overflow-x:auto;">
+                    <div id="step3PagesContainer" style="display:flex; flex-direction:column; align-items:center; gap:1.5rem; width:100%;">
+                        <!-- Pages will be injected here by buildPreview() -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ── PREVIEW OVERLAY ── -->
-    <div class="preview-area" id="previewArea">
-        <button class="close-preview" onclick="togglePreview(false)"><i data-lucide="x"
-                style="width:14px;height:14px;"></i> Close</button>
-        <div id="pagesContainer"></div>
-    </div>
+    <!-- ── REORDER & SECTION CUSTOMIZATION MODAL ── -->
+    <dialog id="customizeModal" style="border: none; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); width: 100%; max-width: 520px; padding: 0; background: #fff; outline: none; margin: auto;">
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #f8fafc; border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="sliders" style="color: var(--primary);"></i> Customize Sections &amp; Order</h3>
+            <button type="button" onclick="closeCustomizeModal()" style="border: none; background: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+        </div>
+        
+        <!-- Modal Body (Main Customization Panel) -->
+        <div id="customizeModalMain" style="padding: 1.5rem; max-height: 420px; overflow-y: auto;">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Use the up and down arrows to reorder, check to toggle visibility, or edit text fields directly to rename standard/custom sections.</p>
+            <div id="sectionsOrderList" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                <!-- Section List Items will be injected here dynamically -->
+            </div>
+        </div>
+        
+        <!-- Modal Body (Add Custom Section Panel - Hidden by default) -->
+        <div id="customizeModalAddSection" style="padding: 1.5rem; display: none;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;"><i data-lucide="plus-circle" style="color: var(--primary);"></i> Add Custom Section</h4>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label>Section Name</label>
+                <input type="text" id="new_section_name" placeholder="e.g. Languages, Volunteer Work" style="border-radius: 0.4rem; padding: 0.55rem 0.75rem;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>Section Type</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <label style="border: 2px solid var(--border-color); border-radius: 0.5rem; padding: 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem; transition: all 0.2s;" id="type_label_text" class="custom-type-label active-type">
+                        <input type="radio" name="new_section_type" value="text" checked style="display: none;" onchange="selectCustomType('text')">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="align-left" style="width: 16px; height: 16px;"></i> Text / Summary</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">Single rich-text block (best for short description or listing tags)</span>
+                    </label>
+                    <label style="border: 2px solid var(--border-color); border-radius: 0.5rem; padding: 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem; transition: all 0.2s;" id="type_label_entries" class="custom-type-label">
+                        <input type="radio" name="new_section_type" value="entries" style="display: none;" onchange="selectCustomType('entries')">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="list" style="width: 16px; height: 16px;"></i> Entry-Based</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">Structured entries list (best for volunteer work, courses, projects)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" onclick="cancelAddCustomSection()" class="btn-action btn-outline" style="max-width: 120px; padding: 0.5rem 1rem; font-size: 0.85rem;">Cancel</button>
+                <button type="button" onclick="submitAddCustomSection()" class="btn-action btn-primary" style="max-width: 120px; padding: 0.5rem 1rem; font-size: 0.85rem;">Add</button>
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div id="customizeModalFooter" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #f8fafc; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+            <button type="button" onclick="openAddSectionPanel()" class="btn-action btn-outline" style="max-width: 180px; padding: 0.5rem; font-size: 0.82rem; height: 36px; display: flex; align-items: center; gap: 0.3rem;">
+                <i data-lucide="plus"></i> Add Custom Section
+            </button>
+            <button type="button" onclick="closeCustomizeModal()" class="btn-action btn-primary" style="max-width: 120px; padding: 0.5rem 1.25rem; font-size: 0.82rem; height: 36px;">
+                Save &amp; Close
+            </button>
+        </div>
+    </dialog>
 
     <footer
         style="padding:2rem;background:var(--bg-gray);border-top:1px solid var(--border-color);text-align:center;color:var(--text-muted);font-size:0.9rem;margin-top:auto;">
@@ -620,6 +842,43 @@
             awards: new Quill('#editor_awards', quillOptions),
             extracurricular: new Quill('#editor_extracurricular', quillOptions)
         };
+
+        // ── LAYOUT CUSTOMIZATION STATE variables ──
+        let formatMode = 'default';
+        let sectionOrder = [
+            'summary',
+            'education',
+            'skills',
+            'experience',
+            'projects',
+            'publications',
+            'awards',
+            'certs',
+            'extracurricular'
+        ];
+        let sectionTitles = {
+            summary: 'Objective',
+            education: 'Education',
+            skills: 'Skills Summary',
+            experience: 'Experience',
+            projects: 'Projects',
+            publications: 'Publications',
+            awards: 'Honors & Awards',
+            certs: 'Certifications',
+            extracurricular: 'Extracurricular Activities'
+        };
+        let sectionVisibilities = {
+            summary: true,
+            education: true,
+            skills: true,
+            experience: true,
+            projects: true,
+            publications: true,
+            awards: true,
+            certs: true,
+            extracurricular: true
+        };
+        let customSections = [];
 
         function validateStep(currentStep) {
             if (currentStep === 1) {
@@ -661,6 +920,11 @@
             document.getElementById('progressLine').style.width = `${((step - 1) / 2) * 100}%`;
             window.scrollTo({ top: 0, behavior: 'smooth' });
             localStorage.setItem('currentStep', step);
+            
+            if (step === 3) {
+                buildPreview();
+            }
+            
             lucide.createIcons();
         }
 
@@ -685,7 +949,7 @@
             div.className = 'entry-item';
             div.id = `entry_input_${entry.id}`;
 
-            let html = `<button class="remove-btn" onclick="removeEntry('${type}', ${entry.id})"><i data-lucide="trash-2" style="width:14px"></i></button>`;
+            let html = `<button type="button" class="remove-btn" onclick="removeEntry('${type}', ${entry.id})"><i data-lucide="trash-2" style="width:14px"></i></button>`;
 
             if (type === 'education') {
                 html += `
@@ -751,26 +1015,549 @@
             return stripped.length > 0;
         }
 
-        function togglePreview(show) {
-            const area = document.getElementById('previewArea');
-            area.style.display = show ? 'flex' : 'none';
-            if (show) { buildPreview(); lucide.createIcons(); }
+        // ── FORMAT SWITCHER LOGIC ──
+        function setFormatMode(mode) {
+            formatMode = mode;
+            
+            const defaultLabel = document.getElementById('label_format_default');
+            const customLabel = document.getElementById('label_format_custom');
+            
+            if (mode === 'default') {
+                defaultLabel.classList.add('active-format-btn');
+                customLabel.classList.remove('active-format-btn');
+                document.getElementById('customFormatControls').style.display = 'none';
+            } else {
+                defaultLabel.classList.remove('active-format-btn');
+                customLabel.classList.add('active-format-btn');
+                document.getElementById('customFormatControls').style.display = 'block';
+            }
+            
+            applyCardVisibilities();
         }
 
-        // ─────────────────────────────────────────────
-        //  PREVIEW BUILDER — mirrors PDF layout exactly
-        // ─────────────────────────────────────────────
+        function isVisible(key) {
+            if (sectionVisibilities[key] === undefined) {
+                return true;
+            }
+            return sectionVisibilities[key];
+        }
 
+        function applyCardVisibilities() {
+            if (formatMode === 'default') {
+                document.getElementById('card_summary').style.display = 'block';
+                document.getElementById('card_education').style.display = 'block';
+                document.getElementById('card_skills').style.display = 'block';
+                document.getElementById('card_experience').style.display = 'block';
+                document.getElementById('card_projects').style.display = 'block';
+                document.getElementById('card_additional').style.display = 'block';
+                document.getElementById('sub_sec_certs').style.display = 'block';
+                document.getElementById('sub_sec_publications').style.display = 'block';
+                document.getElementById('sub_sec_awards').style.display = 'block';
+                document.getElementById('sub_sec_extracurricular').style.display = 'block';
+                
+                customSections.forEach(sec => {
+                    const el = document.getElementById(`card_${sec.id}`);
+                    if (el) el.style.display = 'none';
+                });
+            } else {
+                // Customized Mode
+                renderOrderBadges();
+                
+                document.getElementById('card_summary').style.display = isVisible('summary') ? 'block' : 'none';
+                document.getElementById('card_education').style.display = isVisible('education') ? 'block' : 'none';
+                document.getElementById('card_skills').style.display = isVisible('skills') ? 'block' : 'none';
+                document.getElementById('card_experience').style.display = isVisible('experience') ? 'block' : 'none';
+                document.getElementById('card_projects').style.display = isVisible('projects') ? 'block' : 'none';
+                
+                const showCerts = isVisible('certs');
+                const showPubs = isVisible('publications');
+                const showAwards = isVisible('awards');
+                const showExtra = isVisible('extracurricular');
+                
+                document.getElementById('sub_sec_certs').style.display = showCerts ? 'block' : 'none';
+                document.getElementById('sub_sec_publications').style.display = showPubs ? 'block' : 'none';
+                document.getElementById('sub_sec_awards').style.display = showAwards ? 'block' : 'none';
+                document.getElementById('sub_sec_extracurricular').style.display = showExtra ? 'block' : 'none';
+                
+                if (showCerts || showPubs || showAwards || showExtra) {
+                    document.getElementById('card_additional').style.display = 'block';
+                } else {
+                    document.getElementById('card_additional').style.display = 'none';
+                }
+                
+                customSections.forEach(sec => {
+                    const el = document.getElementById(`card_${sec.id}`);
+                    if (el) {
+                        el.style.display = isVisible(sec.id) ? 'block' : 'none';
+                    }
+                });
+
+                // Physically reorder DOM cards to match sectionOrder
+                reorderBuilderCardsDOM();
+            }
+        }
+
+        function renderOrderBadges() {
+            const container = document.getElementById('sectionOrderBadges');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            sectionOrder.forEach((key, index) => {
+                const title = sectionTitles[key] || getSectionDefaultName(key);
+                const visible = isVisible(key);
+                const badge = document.createElement('span');
+                badge.className = `section-badge ${!visible ? 'hidden-badge' : ''}`;
+                badge.innerHTML = `
+                    <span>${index + 1}. ${escapeHtml(title)}</span>
+                    ${!visible ? '<i data-lucide="eye-off" style="width:12px;height:12px;"></i>' : ''}
+                `;
+                container.appendChild(badge);
+            });
+            lucide.createIcons();
+        }
+
+        // ── CUSTOMIZATION MODAL (DIALOG) HANDLERS ──
+        const customizeModal = document.getElementById('customizeModal');
+
+        function openCustomizeModal() {
+            renderSectionsList();
+            customizeModal.showModal();
+        }
+
+        function closeCustomizeModal() {
+            customizeModal.close();
+            applyCardVisibilities();
+        }
+
+        // Close on boundary click
+        customizeModal.addEventListener('click', (e) => {
+            const dialogDimensions = customizeModal.getBoundingClientRect();
+            if (
+                e.clientX < dialogDimensions.left ||
+                e.clientX > dialogDimensions.right ||
+                e.clientY < dialogDimensions.top ||
+                e.clientY > dialogDimensions.bottom
+            ) {
+                closeCustomizeModal();
+            }
+        });
+
+        function getSectionDefaultName(key) {
+            const defaults = {
+                summary: 'Objective',
+                education: 'Education',
+                skills: 'Skills Summary',
+                experience: 'Experience',
+                projects: 'Projects',
+                publications: 'Publications',
+                awards: 'Honors & Awards',
+                certs: 'Certifications',
+                extracurricular: 'Extracurricular Activities'
+            };
+            if (defaults[key]) return defaults[key];
+            if (key.startsWith('custom_')) {
+                const sec = customSections.find(s => s.id === key);
+                return sec ? sec.name : 'Custom Section';
+            }
+            return key;
+        }
+
+        function renderSectionsList() {
+            const container = document.getElementById('sectionsOrderList');
+            container.innerHTML = '';
+            let dragSrcIdx = null;
+
+            sectionOrder.forEach((key, index) => {
+                const title = sectionTitles[key] || getSectionDefaultName(key);
+                const isSecVisible = isVisible(key);
+
+                const div = document.createElement('div');
+                div.className = 'reorder-item';
+                div.setAttribute('draggable', 'true');
+                div.dataset.idx = index;
+
+                div.innerHTML = `
+                    <span style="color:#a5b4fc;display:flex;align-items:center;padding:2px 4px;flex-shrink:0;" title="Drag to reorder">
+                        <i data-lucide="grip-vertical" style="width:16px;height:16px;"></i>
+                    </span>
+                    <span style="font-size:0.78rem;font-weight:800;color:#6366f1;min-width:24px;flex-shrink:0;">${index + 1}.</span>
+                    <div style="display:flex;align-items:center;gap:0.4rem;flex:1;min-width:0;">
+                        <div style="display:flex;flex-direction:column;gap:1px;flex-shrink:0;">
+                            <button type="button" onclick="moveSection(${index}, -1)" ${index === 0 ? 'disabled' : ''} style="border:none;background:none;cursor:pointer;padding:2px;display:flex;align-items:center;color:${index === 0 ? '#e2e8f0' : '#6366f1'};"><i data-lucide="chevron-up" style="width:15px;height:15px;"></i></button>
+                            <button type="button" onclick="moveSection(${index}, 1)" ${index === sectionOrder.length - 1 ? 'disabled' : ''} style="border:none;background:none;cursor:pointer;padding:2px;display:flex;align-items:center;color:${index === sectionOrder.length - 1 ? '#e2e8f0' : '#6366f1'};"><i data-lucide="chevron-down" style="width:15px;height:15px;"></i></button>
+                        </div>
+                        <input type="text" value="${escapeHtml(title)}" oninput="renameSection('${key}', this.value)" style="padding:0.3rem 0.5rem;font-size:0.84rem;border:1px solid #e2e8f0;border-radius:0.3rem;font-weight:600;flex:1;min-width:0;" placeholder="Section Title">
+                        ${key.startsWith('custom_') ? `<span class="section-badge" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;white-space:nowrap;flex-shrink:0;">Custom</span>` : ''}
+                    </div>
+                    <label style="margin:0;font-size:0.78rem;display:flex;align-items:center;gap:0.3rem;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:0.5rem;">
+                        <input type="checkbox" ${isSecVisible ? 'checked' : ''} onchange="toggleSectionVisibility('${key}', this.checked)"> Visible
+                    </label>
+                    ${key.startsWith('custom_') ? `<button type="button" onclick="deleteCustomSection('${key}')" style="border:none;background:none;cursor:pointer;color:#ef4444;padding:3px;display:flex;align-items:center;flex-shrink:0;margin-left:2px;" title="Delete section"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>` : ''}
+                `;
+
+                // ── Drag-and-drop event handlers ──
+                div.addEventListener('dragstart', (e) => {
+                    dragSrcIdx = index;
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => { div.style.opacity = '0.45'; }, 0);
+                });
+
+                div.addEventListener('dragend', () => {
+                    div.style.opacity = '';
+                    container.querySelectorAll('.reorder-item').forEach(el => el.classList.remove('drag-over'));
+                    dragSrcIdx = null;
+                });
+
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    container.querySelectorAll('.reorder-item').forEach(el => el.classList.remove('drag-over'));
+                    div.classList.add('drag-over');
+                });
+
+                div.addEventListener('dragleave', () => {
+                    div.classList.remove('drag-over');
+                });
+
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    div.classList.remove('drag-over');
+                    if (dragSrcIdx === null || dragSrcIdx === index) return;
+                    // Swap positions in sectionOrder
+                    const temp = sectionOrder[dragSrcIdx];
+                    sectionOrder[dragSrcIdx] = sectionOrder[index];
+                    sectionOrder[index] = temp;
+                    dragSrcIdx = null;
+                    renderSectionsList();
+                    reorderBuilderCardsDOM();
+                    renderOrderBadges();
+                });
+
+                container.appendChild(div);
+            });
+
+            lucide.createIcons();
+        }
+
+        function moveSection(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= sectionOrder.length) return;
+
+            const temp = sectionOrder[index];
+            sectionOrder[index] = sectionOrder[targetIndex];
+            sectionOrder[targetIndex] = temp;
+
+            renderSectionsList();
+            reorderBuilderCardsDOM();
+            applyCardVisibilities();
+        }
+
+        // ── PHYSICAL DOM CARD REORDERING ──
+        function reorderBuilderCardsDOM() {
+            if (formatMode !== 'custom') return;
+            const container = document.getElementById('builderCardsContainer');
+            if (!container) return;
+
+            const directCardMap = {
+                summary:    document.getElementById('card_summary'),
+                education:  document.getElementById('card_education'),
+                skills:     document.getElementById('card_skills'),
+                experience: document.getElementById('card_experience'),
+                projects:   document.getElementById('card_projects'),
+            };
+            const additionalKeys = new Set(['certs', 'publications', 'awards', 'extracurricular']);
+            const additionalCard = document.getElementById('card_additional');
+
+            const seen = new Set();
+            const ordered = [];
+
+            sectionOrder.forEach(key => {
+                if (directCardMap[key] && !seen.has(directCardMap[key])) {
+                    seen.add(directCardMap[key]);
+                    ordered.push(directCardMap[key]);
+                } else if (additionalKeys.has(key) && additionalCard && !seen.has(additionalCard)) {
+                    seen.add(additionalCard);
+                    ordered.push(additionalCard);
+                } else if (key.startsWith('custom_')) {
+                    const el = document.getElementById(`card_${key}`);
+                    if (el && !seen.has(el)) {
+                        seen.add(el);
+                        ordered.push(el);
+                    }
+                }
+            });
+
+            // Re-append in order — this moves the DOM nodes
+            ordered.forEach(el => container.appendChild(el));
+            updateBuilderCardNumbers();
+        }
+
+        // ── SERIAL NUMBER BADGES ON BUILDER CARD HEADERS ──
+        function updateBuilderCardNumbers() {
+            // Gather all label IDs (standard + custom)
+            const standardLabelIds = [
+                'card_title_label_summary', 'card_title_label_education',
+                'card_title_label_skills', 'card_title_label_experience',
+                'card_title_label_projects', 'card_title_label_certs',
+                'card_title_label_publications', 'card_title_label_awards',
+                'card_title_label_extracurricular'
+            ];
+
+            // Reset all labels to base text first
+            const resetLabel = (el) => {
+                if (!el) return;
+                if (!el.dataset.baseTitle) el.dataset.baseTitle = el.textContent.trim();
+                el.textContent = el.dataset.baseTitle;
+            };
+
+            standardLabelIds.forEach(id => resetLabel(document.getElementById(id)));
+            customSections.forEach(sec => resetLabel(document.getElementById(`card_title_label_${sec.id}`)));
+
+            if (formatMode !== 'custom') return;
+
+            let num = 1;
+            sectionOrder.forEach(key => {
+                if (!isVisible(key)) return;
+                const labelEl = document.getElementById(`card_title_label_${key}`);
+                if (!labelEl) return;
+                if (!labelEl.dataset.baseTitle) labelEl.dataset.baseTitle = labelEl.textContent.trim();
+                const baseText = labelEl.dataset.baseTitle;
+                labelEl.innerHTML = `<span class="card-num-badge">${num}</span>${escapeHtml(baseText)}`;
+                num++;
+            });
+        }
+
+        function renameSection(key, newTitle) {
+            sectionTitles[key] = newTitle;
+            const labelEl = document.getElementById(`card_title_label_${key}`);
+            if (labelEl) {
+                // Update the stored base title so number badges still work
+                labelEl.dataset.baseTitle = newTitle;
+                if (formatMode === 'custom') {
+                    updateBuilderCardNumbers();
+                } else {
+                    labelEl.textContent = newTitle;
+                }
+            }
+            if (key.startsWith('custom_')) {
+                const sec = customSections.find(s => s.id === key);
+                if (sec) sec.name = newTitle;
+            }
+            renderOrderBadges();
+        }
+
+        function toggleSectionVisibility(key, checked) {
+            sectionVisibilities[key] = checked;
+            applyCardVisibilities();
+            if (formatMode === 'custom') updateBuilderCardNumbers();
+        }
+
+        // ── DELETE CUSTOM SECTION ──
+        function deleteCustomSection(key) {
+            if (!confirm('Delete this custom section? This cannot be undone.')) return;
+            sectionOrder = sectionOrder.filter(k => k !== key);
+            customSections = customSections.filter(s => s.id !== key);
+            delete sectionVisibilities[key];
+            delete sectionTitles[key];
+            const el = document.getElementById(`card_${key}`);
+            if (el) el.remove();
+            renderSectionsList();
+            renderOrderBadges();
+            updateBuilderCardNumbers();
+        }
+
+        // ── CUSTOM SECTIONS DYNAMIC INPUT CREATION ──
+        function openAddSectionPanel() {
+            document.getElementById('customizeModalMain').style.display = 'none';
+            document.getElementById('customizeModalFooter').style.display = 'none';
+            document.getElementById('customizeModalAddSection').style.display = 'block';
+            document.getElementById('new_section_name').value = '';
+            selectCustomType('text');
+        }
+
+        function cancelAddCustomSection() {
+            document.getElementById('customizeModalAddSection').style.display = 'none';
+            document.getElementById('customizeModalMain').style.display = 'block';
+            document.getElementById('customizeModalFooter').style.display = 'flex';
+        }
+
+        // ── OPEN ADD-CUSTOM-SECTION PANEL DIRECTLY (from Step 2 toolbar button) ──
+        function openAddSectionDirectly() {
+            renderSectionsList();
+            customizeModal.showModal();
+            // Immediately jump to add-section panel
+            document.getElementById('customizeModalMain').style.display = 'none';
+            document.getElementById('customizeModalFooter').style.display = 'none';
+            document.getElementById('customizeModalAddSection').style.display = 'block';
+            document.getElementById('new_section_name').value = '';
+            selectCustomType('text');
+        }
+
+        function selectCustomType(type) {
+            const textLabel = document.getElementById('type_label_text');
+            const entriesLabel = document.getElementById('type_label_entries');
+            if (type === 'text') {
+                textLabel.classList.add('active-type');
+                entriesLabel.classList.remove('active-type');
+                document.querySelector('input[name="new_section_type"][value="text"]').checked = true;
+            } else {
+                textLabel.classList.remove('active-type');
+                entriesLabel.classList.add('active-type');
+                document.querySelector('input[name="new_section_type"][value="entries"]').checked = true;
+            }
+        }
+
+        function submitAddCustomSection() {
+            const nameInput = document.getElementById('new_section_name');
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Please enter a section name.');
+                return;
+            }
+            
+            const type = document.querySelector('input[name="new_section_type"]:checked').value;
+            const newSecId = 'custom_' + Date.now();
+            
+            const newSec = {
+                id: newSecId,
+                name: name,
+                type: type,
+                content: type === 'text' ? '' : []
+            };
+            
+            customSections.push(newSec);
+            sectionOrder.push(newSecId);
+            sectionTitles[newSecId] = name;
+            sectionVisibilities[newSecId] = true;
+            
+            renderCustomSectionInput(newSec);
+            cancelAddCustomSection();
+            renderSectionsList();
+        }
+
+        function renderCustomSectionInput(sec) {
+            const existing = document.getElementById(`card_${sec.id}`);
+            if (existing) existing.remove();
+            
+            const container = document.getElementById('custom_sections_inputs');
+            const card = document.createElement('div');
+            card.className = 'section-box';
+            card.id = `card_${sec.id}`;
+            
+            if (sec.type === 'text') {
+                card.innerHTML = `
+                    <h2><i data-lucide="file-edit"></i> <span id="card_title_label_${sec.id}">${escapeHtml(sectionTitles[sec.id] || sec.name)}</span></h2>
+                    <div id="editor_${sec.id}" class="quill-editor" style="height:120px; margin-bottom: 1rem;"></div>
+                `;
+                container.appendChild(card);
+                
+                const editor = new Quill(`#editor_${sec.id}`, quillOptions);
+                editor.root.innerHTML = sec.content || '';
+                editor.on('text-change', () => {
+                    sec.content = editor.root.innerHTML;
+                });
+                editors[sec.id] = editor;
+            } else {
+                card.innerHTML = `
+                    <h2><i data-lucide="list"></i> <span id="card_title_label_${sec.id}">${escapeHtml(sectionTitles[sec.id] || sec.name)}</span></h2>
+                    <div id="entries_container_${sec.id}"></div>
+                    <button type="button" class="add-btn" onclick="addCustomEntry('${sec.id}')">+ Add Entry</button>
+                `;
+                container.appendChild(card);
+                
+                if (Array.isArray(sec.content)) {
+                    sec.content.forEach(entry => {
+                        renderCustomEntryInputs(sec.id, entry);
+                    });
+                }
+            }
+            lucide.createIcons();
+        }
+
+        function renderCustomEntryInputs(secId, entry) {
+            const container = document.getElementById(`entries_container_${secId}`);
+            if (!container) return;
+            
+            const div = document.createElement('div');
+            div.className = 'entry-item';
+            div.id = `entry_input_${entry.id}`;
+            
+            div.innerHTML = `
+                <button type="button" class="remove-btn" onclick="removeCustomEntry('${secId}', ${entry.id})"><i data-lucide="trash-2" style="width:14px"></i></button>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" placeholder="e.g. Role, Course or Award Name" value="${escapeHtml(entry.fields.title || '')}" oninput="updateCustomField('${secId}', ${entry.id}, 'title', this.value)" style="font-weight:700;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+                    <div class="form-group">
+                        <label>Sub-title / Institution (Optional)</label>
+                        <input type="text" placeholder="e.g. Organization, Company" value="${escapeHtml(entry.fields.subtitle || '')}" oninput="updateCustomField('${secId}', ${entry.id}, 'subtitle', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Dates / Location (Optional)</label>
+                        <input type="text" placeholder="e.g. Jan 2023 - Present" value="${escapeHtml(entry.fields.dates || '')}" oninput="updateCustomField('${secId}', ${entry.id}, 'dates', this.value)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description / Details</label>
+                    <div id="desc_${entry.id}" class="quill-editor" style="height:100px; margin-bottom: 1rem;"></div>
+                </div>
+            `;
+            container.appendChild(div);
+            
+            const editor = new Quill(`#desc_${entry.id}`, quillOptions);
+            editor.root.innerHTML = entry.fields.description || '';
+            editor.on('text-change', () => {
+                updateCustomField(secId, entry.id, 'description', editor.root.innerHTML);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function addCustomEntry(secId) {
+            const sec = customSections.find(s => s.id === secId);
+            if (!sec) return;
+            if (!Array.isArray(sec.content)) sec.content = [];
+            
+            const entryId = Math.floor(Date.now() + Math.random() * 10000);
+            const entry = {
+                id: entryId,
+                fields: {
+                    title: '',
+                    dates: '',
+                    subtitle: '',
+                    description: ''
+                }
+            };
+            sec.content.push(entry);
+            renderCustomEntryInputs(secId, entry);
+        }
+
+        function removeCustomEntry(secId, entryId) {
+            const sec = customSections.find(s => s.id === secId);
+            if (!sec) return;
+            sec.content = sec.content.filter(e => e.id !== entryId);
+            const el = document.getElementById(`entry_input_${entryId}`);
+            if (el) el.remove();
+        }
+
+        function updateCustomField(secId, entryId, field, value) {
+            const sec = customSections.find(s => s.id === secId);
+            if (!sec) return;
+            const entry = sec.content.find(e => e.id === entryId);
+            if (entry) {
+                entry.fields[field] = value;
+            }
+        }
+
+        // ── PREVIEW BUILDER — mirrors WeasyPrint layout exactly ──
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function quillToPreviewHtml(html) {
-            // Convert Quill HTML to clean preview HTML, preserving bullets & formatting
             if (!html || html === '<p><br></p>') return '';
-            // Quill uses <p>, <ul>, <li>, <strong>, <em>, <u>
-            // Keep them — the .r-content CSS handles display
             return html;
         }
 
@@ -789,9 +1576,9 @@
             return items.join('<span class="sep"> | </span>');
         }
 
-        function buildEducationHTML(eduList) {
+        function buildEducationHTML(eduList, title = 'Education') {
             if (!eduList || !eduList.length) return '';
-            let html = '<div class="r-section"><div class="r-section-title">Education</div>';
+            let html = `<div class="r-section"><div class="r-section-title">${escapeHtml(title)}</div>`;
             eduList.forEach(e => {
                 const inst = e.fields.institution || '';
                 const degree = e.fields.degree || '';
@@ -816,11 +1603,11 @@
             return html;
         }
 
-        function buildSkillsHTML(techHtml, nonTechHtml) {
+        function buildSkillsHTML(techHtml, nonTechHtml, title = 'Skills Summary') {
             const hasT = hasContent(techHtml);
             const hasNT = hasContent(nonTechHtml);
             if (!hasT && !hasNT) return '';
-            let html = '<div class="r-section"><div class="r-section-title">Skills Summary</div>';
+            let html = `<div class="r-section"><div class="r-section-title">${escapeHtml(title)}</div>`;
             if (hasT) {
                 html += `<div class="r-sub-title">Technical Skills</div>
                          <div class="r-content">${quillToPreviewHtml(techHtml)}</div>`;
@@ -833,11 +1620,11 @@
             return html;
         }
 
-        function buildExperienceHTML(expList) {
+        function buildExperienceHTML(expList, title = 'Experience') {
             if (!expList || !expList.length) return '';
             let hasAny = expList.some(e => e.fields.company || e.fields.role);
             if (!hasAny) return '';
-            let html = '<div class="r-section"><div class="r-section-title">Experience</div>';
+            let html = `<div class="r-section"><div class="r-section-title">${escapeHtml(title)}</div>`;
             expList.forEach(e => {
                 const company = e.fields.company || '';
                 const role = e.fields.role || '';
@@ -859,11 +1646,11 @@
             return html;
         }
 
-        function buildProjectsHTML(projList) {
+        function buildProjectsHTML(projList, title = 'Projects') {
             if (!projList || !projList.length) return '';
             let hasAny = projList.some(e => e.fields.name || hasContent(e.fields.description));
             if (!hasAny) return '';
-            let html = '<div class="r-section"><div class="r-section-title">Projects</div>';
+            let html = `<div class="r-section"><div class="r-section-title">${escapeHtml(title)}</div>`;
             projList.forEach(e => {
                 const name = e.fields.name || '';
                 const link = e.fields.link || '';
@@ -884,10 +1671,10 @@
             return html;
         }
 
-        function buildRichSection(label, htmlContent) {
+        function buildRichSection(title, htmlContent) {
             if (!hasContent(htmlContent)) return '';
             return `<div class="r-section">
-                <div class="r-section-title">${label}</div>
+                <div class="r-section-title">${escapeHtml(title)}</div>
                 <div class="r-content">${quillToPreviewHtml(htmlContent)}</div>
             </div>`;
         }
@@ -916,34 +1703,100 @@
                 <div class="r-contact">${buildContactHTML(personal)}</div>
             `;
 
-            if (hasContent(summaryHtml)) {
-                content += `<div class="r-section">
-                    <div class="r-section-title">Objective</div>
-                    <div class="r-content">${quillToPreviewHtml(summaryHtml)}</div>
-                </div>`;
-            }
+            const order = formatMode === 'custom' ? sectionOrder : [
+                'summary',
+                'education',
+                'skills',
+                'experience',
+                'projects',
+                'publications',
+                'awards',
+                'certs',
+                'extracurricular'
+            ];
 
-            content += buildEducationHTML(entryStore.education);
-            content += buildSkillsHTML(techHtml, nonTechHtml);
-            content += buildExperienceHTML(entryStore.experience);
-            content += buildProjectsHTML(entryStore.projects);
-            content += buildRichSection('Publications', researchHtml);
-            content += buildRichSection('Honors &amp; Awards', awardsHtml);
-            content += buildRichSection('Certifications', certsHtml);
-            content += buildRichSection('Extracurricular Activities', extraHtml);
+            order.forEach(key => {
+                if (formatMode === 'default' || isVisible(key)) {
+                    const title = sectionTitles[key] || getSectionDefaultName(key);
+                    
+                    if (key === 'summary') {
+                        if (hasContent(summaryHtml)) {
+                            content += `<div class="r-section">
+                                <div class="r-section-title">${escapeHtml(title)}</div>
+                                <div class="r-content">${quillToPreviewHtml(summaryHtml)}</div>
+                            </div>`;
+                        }
+                    } else if (key === 'education') {
+                        content += buildEducationHTML(entryStore.education, title);
+                    } else if (key === 'skills') {
+                        content += buildSkillsHTML(techHtml, nonTechHtml, title);
+                    } else if (key === 'experience') {
+                        content += buildExperienceHTML(entryStore.experience, title);
+                    } else if (key === 'projects') {
+                        content += buildProjectsHTML(entryStore.projects, title);
+                    } else if (key === 'publications') {
+                        content += buildRichSection(title, researchHtml);
+                    } else if (key === 'awards') {
+                        content += buildRichSection(title, awardsHtml);
+                    } else if (key === 'certs') {
+                        content += buildRichSection(title, certsHtml);
+                    } else if (key === 'extracurricular') {
+                        content += buildRichSection(title, extraHtml);
+                    } else if (key.startsWith('custom_') && formatMode === 'custom') {
+                        const customSec = customSections.find(cs => cs.id === key);
+                        if (customSec) {
+                            if (customSec.type === 'text') {
+                                if (hasContent(customSec.content)) {
+                                    content += `<div class="r-section">
+                                        <div class="r-section-title">${escapeHtml(title)}</div>
+                                        <div class="r-content">${quillToPreviewHtml(customSec.content)}</div>
+                                    </div>`;
+                                }
+                            } else if (customSec.type === 'entries') {
+                                if (Array.isArray(customSec.content) && customSec.content.length > 0) {
+                                    let hasAnyCustom = customSec.content.some(e => e.fields.title || e.fields.subtitle || hasContent(e.fields.description));
+                                    if (hasAnyCustom) {
+                                        let customHtml = `<div class="r-section"><div class="r-section-title">${escapeHtml(title)}</div>`;
+                                        customSec.content.forEach(entry => {
+                                            const titleVal = entry.fields.title || '';
+                                            const datesVal = entry.fields.dates || '';
+                                            const subVal = entry.fields.subtitle || '';
+                                            const descVal = entry.fields.description || '';
+                                            if (!titleVal && !subVal && !descVal) return;
+                                            
+                                            customHtml += '<div class="r-entry">';
+                                            if (titleVal) {
+                                                customHtml += `<div class="entry-row">
+                                                    <span class="entry-title">${escapeHtml(titleVal)}</span>
+                                                    ${datesVal ? `<span class="entry-date">${escapeHtml(datesVal)}</span>` : ''}
+                                                </div>`;
+                                            }
+                                            if (subVal) {
+                                                customHtml += `<div class="entry-sub">${escapeHtml(subVal)}</div>`;
+                                            }
+                                            if (hasContent(descVal)) {
+                                                customHtml += `<div class="r-content" style="margin-top:3px;">${quillToPreviewHtml(descVal)}</div>`;
+                                            }
+                                            customHtml += '</div>';
+                                        });
+                                        customHtml += '</div>';
+                                        content += customHtml;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
 
-            // Wrap in a resume page
-            // We use a single page div — browser will overflow naturally and we
-            // can scroll. For multi-page simulation we split using JS after render.
-            const container = document.getElementById('pagesContainer');
+            const container = document.getElementById('step3PagesContainer');
             container.innerHTML = `<div class="resume-page" id="resumeContent">${content}</div>`;
 
-            // After render, split into multiple pages if content overflows
             setTimeout(() => splitIntoPages(), 50);
         }
 
         function splitIntoPages() {
-            const PAGE_HEIGHT_PX = 1123; // A4 at 96dpi
+            const PAGE_HEIGHT_PX = 1123; // A4 height at 96dpi
             const PADDING_TOP = 48;
             const PADDING_BOTTOM = 60;
             const USABLE_HEIGHT = PAGE_HEIGHT_PX - PADDING_TOP - PADDING_BOTTOM;
@@ -954,20 +1807,17 @@
             const totalHeight = page.scrollHeight;
             if (totalHeight <= PAGE_HEIGHT_PX) return; // fits in one page
 
-            // Get all direct section children and split them across pages
-            const container = document.getElementById('pagesContainer');
+            const container = document.getElementById('step3PagesContainer');
             const sections = Array.from(page.querySelectorAll('.r-section, .r-name, .r-contact'));
 
             if (!sections.length) return;
 
-            // Clone the page structure and redistribute
             let pages = [];
             let currentPageContent = '';
             let currentHeight = 0;
 
-            // Re-measure each section's height
             sections.forEach(sec => {
-                const secHeight = sec.getBoundingClientRect().height + 12; // +12 for margins
+                const secHeight = sec.getBoundingClientRect().height + 12; // margin height
                 if (currentHeight + secHeight > USABLE_HEIGHT && currentPageContent) {
                     pages.push(currentPageContent);
                     currentPageContent = sec.outerHTML;
@@ -979,9 +1829,8 @@
             });
             if (currentPageContent) pages.push(currentPageContent);
 
-            if (pages.length <= 1) return; // no need to split
+            if (pages.length <= 1) return;
 
-            // Rebuild container with multiple pages
             container.innerHTML = '';
             pages.forEach((pageContent, i) => {
                 const pageDiv = document.createElement('div');
@@ -989,25 +1838,20 @@
                 pageDiv.innerHTML = pageContent;
                 container.appendChild(pageDiv);
                 if (i < pages.length - 1) {
-                    // Page number indicator
                     const label = document.createElement('div');
                     label.style.cssText = 'text-align:center;color:#ccc;font-size:11px;padding:6px 0;font-family:sans-serif;';
                     label.textContent = `— Page ${i + 1} of ${pages.length} —`;
                     container.appendChild(label);
                 }
             });
-            // Re-render icons for all pages
             lucide.createIcons();
         }
 
-        // ─────────────────────────────────────────────
-        //  SAVE & DOWNLOAD
-        // ─────────────────────────────────────────────
-
+        // ── SERIALIZE & DRAFT & DOWNLOAD ──
         const currentResumeId = "{{ resume_id or '' }}";
 
-        async function saveAndDownload(event) {
-            const data = {
+        function serializeFormData() {
+            return {
                 resume_id: currentResumeId,
                 personal_details: {
                     name: document.getElementById('in_name').value,
@@ -1028,9 +1872,61 @@
                     certifications: getCleanHTML(editors.certs),
                     research_papers: getCleanHTML(editors.research),
                     achievements: getCleanHTML(editors.awards),
-                    extracurricular_activities: getCleanHTML(editors.extracurricular)
+                    extracurricular_activities: getCleanHTML(editors.extracurricular),
+                    
+                    // Custom layout state variables for parity
+                    format_mode: formatMode,
+                    section_order: sectionOrder,
+                    section_titles: sectionTitles,
+                    section_visibilities: sectionVisibilities,
+                    custom_sections: customSections.map(sec => {
+                        return {
+                            id: sec.id,
+                            name: sec.name,
+                            type: sec.type,
+                            content: sec.content
+                        };
+                    })
                 }
             };
+        }
+
+        async function saveDraftOnly(silent = false) {
+            const data = serializeFormData();
+            if (!data.personal_details.name || !data.personal_details.email) {
+                alert('Please provide at least Name and Email to save draft.');
+                return false;
+            }
+            
+            try {
+                const saveRes = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (saveRes.ok) {
+                    const saveJson = await saveRes.json();
+                    if (saveJson.resume_id && !currentResumeId) {
+                        window.history.replaceState(null, '', `/builder/${saveJson.resume_id}`);
+                    }
+                    if (!silent) {
+                        alert('Draft saved successfully!');
+                    }
+                    return true;
+                } else {
+                    alert('Failed to save draft.');
+                    return false;
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection error saving draft.');
+                return false;
+            }
+        }
+
+        async function saveAndDownload(event) {
+            const data = serializeFormData();
 
             if (!data.personal_details.name || !data.personal_details.email) {
                 alert('Please provide at least Name and Email');
@@ -1048,14 +1944,13 @@
                 if (saveRes.ok) {
                     const saveJson = await saveRes.json();
                     if (saveJson.resume_id && !currentResumeId) {
-                        // Update URL without reloading to keep the download flow alive
                         window.history.replaceState(null, '', `/builder/${saveJson.resume_id}`);
                     }
                 } else {
                     console.warn('Backend save failed, but proceeding with PDF generation.');
                 }
 
-                // 2. Build the preview in the hidden container
+                // 2. Build the preview in step 3
                 buildPreview();
 
                 // 3. Generate PDF using Backend
@@ -1104,10 +1999,7 @@
             }
         }
 
-        // ─────────────────────────────────────────────
-        //  AUTO-LOAD RESUME
-        // ─────────────────────────────────────────────
-
+        // ── AUTO-LOAD RESUME ──
         window.onload = async () => {
             // Restore step
             const savedStep = localStorage.getItem('currentStep');
@@ -1143,6 +2035,36 @@
                             (pd.education || []).forEach(f => addEntry('education', { ...getDefaultFields('education'), ...f }));
                             (pd.work_experience || []).forEach(f => addEntry('experience', { ...getDefaultFields('experience'), ...f }));
                             (pd.projects || []).forEach(f => addEntry('projects', { ...getDefaultFields('projects'), ...f }));
+
+                            // ── Restore Custom states ──
+                            if (pd.format_mode) {
+                                formatMode = pd.format_mode;
+                                const rad = document.querySelector(`input[name="format_mode"][value="${formatMode}"]`);
+                                if (rad) rad.checked = true;
+                            }
+                            if (pd.section_order) {
+                                sectionOrder = pd.section_order;
+                            }
+                            if (pd.section_titles) {
+                                sectionTitles = { ...sectionTitles, ...pd.section_titles };
+                                Object.keys(sectionTitles).forEach(key => {
+                                    const titleLabel = document.getElementById(`card_title_label_${key}`);
+                                    if (titleLabel) {
+                                        titleLabel.textContent = sectionTitles[key];
+                                    }
+                                });
+                            }
+                            if (pd.section_visibilities) {
+                                sectionVisibilities = { ...sectionVisibilities, ...pd.section_visibilities };
+                            }
+                            if (pd.custom_sections) {
+                                customSections = pd.custom_sections;
+                                customSections.forEach(sec => {
+                                    renderCustomSectionInput(sec);
+                                });
+                            }
+
+                            setFormatMode(formatMode);
                         }
                     }
                 }

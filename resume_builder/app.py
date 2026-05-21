@@ -20,6 +20,8 @@ from playwright.sync_api import sync_playwright
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 import certifi
+import smtplib
+from email.message import EmailMessage
 
 # Load environment variables from the same directory as this file
 from pathlib import Path
@@ -116,6 +118,33 @@ def migrate_data():
 
 # Run migration if needed (comment out after first successful run)
 # migrate_data()
+
+def send_email_with_attachment(to_email, pdf_bytes, filename):
+    sender_email = os.environ.get('SENDER_EMAIL')
+    sender_password = os.environ.get('SENDER_PASSWORD')
+    
+    if not sender_email or not sender_password or not to_email:
+        logger.error("SMTP credentials not configured or recipient email missing")
+        return False
+        
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = 'Your Resume from Resumora'
+        msg['From'] = sender_email
+        msg['To'] = to_email
+        msg.set_content('Thank you for using Resumora! Please find your newly generated resume attached.')
+        
+        msg.add_attachment(pdf_bytes, maintype='application', subtype='pdf', filename=filename)
+        
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+            
+        logger.info(f"Email successfully forwarded to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
 
 def track_stat(stat_key):
     """Track daily statistics in MongoDB with graceful failure"""
@@ -393,6 +422,11 @@ def download_pdf():
         
         filename = f"{personal.get('name', 'Resume').replace(' ', '_')}_Resume.pdf"
         
+        # Forward resume via email in the background if email is provided
+        user_email = personal.get('email')
+        if user_email:
+            run_in_background(send_email_with_attachment, user_email, pdf_content, filename)
+            
         return send_file(
             pdf_file,
             mimetype='application/pdf',
@@ -680,6 +714,12 @@ def download_pdf_by_id(resume_id):
             return "Failed to generate PDF", 500
             
         filename = f"{personal.get('name', 'Resume').replace(' ', '_')}_Resume.pdf"
+        
+        # Forward resume via email in the background if email is provided
+        user_email = personal.get('email')
+        if user_email:
+            run_in_background(send_email_with_attachment, user_email, pdf_content, filename)
+            
         return send_file(
             BytesIO(pdf_content),
             mimetype='application/pdf',
