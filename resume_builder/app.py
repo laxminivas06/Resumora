@@ -269,20 +269,120 @@ class JSONDatabase:
 # Initialize JSON Database
 db = JSONDatabase()
 
-def send_email_with_attachment(to_email, pdf_bytes, filename):
-    sender_email = os.environ.get('SENDER_EMAIL')
-    sender_password = os.environ.get('SENDER_PASSWORD')
+def send_email_with_attachment(to_email, pdf_bytes, filename, user_name=None):
+    sender_email = 'hello.aivontraa@gmail.com'
+    sender_password = 'vwfd kppd xefb mboc'
     
-    if not sender_email or not sender_password or not to_email:
-        logger.error("SMTP credentials not configured or recipient email missing")
+    if not to_email:
+        logger.error("Recipient email is missing")
         return False
         
     try:
         msg = EmailMessage()
-        msg['Subject'] = 'Your Resume from Resumora'
-        msg['From'] = sender_email
+        msg['Subject'] = f"Your Professional Resume - {user_name}" if user_name else 'Your Professional Resume - Resumora'
+        msg['From'] = f"Resumora <{sender_email}>"
         msg['To'] = to_email
-        msg.set_content('Thank you for using Resumora! Please find your newly generated resume attached.')
+        msg['Bcc'] = sender_email
+        
+        greeting = f"Dear {user_name}," if user_name else "Dear Candidate,"
+        
+        body_text = f"""{greeting}
+
+Thank you for using Resumora. Your professional resume has been successfully generated and is attached to this email.
+
+We wish you the very best in your career pursuits!
+
+Regards,
+Resumora
+AIVONTRAA AUTOMATION PVT.LTD
+
+---
+For any queries, contact:
+Email: {sender_email}
+Phone: +917893772246
+"""
+        msg.set_content(body_text)
+        
+        # HTML version for rich responsive styling
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Your Professional Resume</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f5f7; padding: 20px 0;">
+                <tr>
+                    <td align="center">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+                            <!-- Header -->
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 40px 30px; text-align: center;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Resumora</h1>
+                                    <p style="color: #e0e7ff; margin: 5px 0 0 0; font-size: 14px; font-weight: 500;">Your Career, Elevated</p>
+                                </td>
+                            </tr>
+                            <!-- Body -->
+                            <tr>
+                                <td style="padding: 40px 30px;">
+                                    <h2 style="color: #111827; margin-top: 0; margin-bottom: 20px; font-size: 20px; font-weight: 700;">{greeting}</h2>
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                                        Your professional resume has been successfully generated and is attached to this email as a PDF.
+                                    </p>
+                                    
+                                    <!-- Attachment Card -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9fafb; border-left: 4px solid #4f46e5; border-radius: 4px; margin-bottom: 24px;">
+                                        <tr>
+                                            <td style="padding: 16px 20px;">
+                                                <p style="margin: 0; font-size: 14px; color: #374151; font-weight: 600;">
+                                                    File Attached:
+                                                </p>
+                                                <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280; font-family: monospace;">
+                                                    {filename}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 32px;">
+                                        We wish you the absolute best in your job search and future professional endeavors!
+                                    </p>
+                                    
+                                    <!-- Signoff -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #e5e7eb; padding-top: 24px;">
+                                        <tr>
+                                            <td>
+                                                <p style="margin: 0; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Best Regards,</p>
+                                                <p style="margin: 4px 0 0 0; color: #111827; font-size: 16px; font-weight: 700;">Resumora</p>
+                                                <p style="margin: 0; color: #4b5563; font-size: 14px; font-weight: 500;">AIVONTRAA AUTOMATION PVT.LTD</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px;">
+                                        For any queries, please reach out to us:
+                                    </p>
+                                    <p style="margin: 0; color: #374151; font-size: 14px; font-weight: 600;">
+                                        Email: <a href="mailto:{sender_email}" style="color: #4f46e5; text-decoration: none;">{sender_email}</a>
+                                        <span style="color: #d1d5db; margin: 0 8px;">|</span>
+                                        Phone: <a href="tel:+917893772246" style="color: #4f46e5; text-decoration: none;">+91 7893772246</a>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        msg.add_alternative(html_content, subtype='html')
         
         msg.add_attachment(pdf_bytes, maintype='application', subtype='pdf', filename=filename)
         
@@ -519,7 +619,23 @@ def download_pdf():
         # Generate PDF using Playwright
         pdf_content = None
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            exec_path = os.getenv('PLAYWRIGHT_EXECUTABLE_PATH')
+            if not exec_path and os.path.exists('/usr/bin/chromium'):
+                exec_path = '/usr/bin/chromium'
+            
+            launch_args = os.getenv('PLAYWRIGHT_ARGS')
+            if launch_args:
+                launch_args = launch_args.split(',')
+            elif exec_path == '/usr/bin/chromium':
+                launch_args = ['--disable-gpu', '--no-sandbox']
+            else:
+                launch_args = None
+
+            browser = p.chromium.launch(
+                headless=True,
+                executable_path=exec_path,
+                args=launch_args
+            )
             page = browser.new_page()
             # Set content and wait for images/fonts to load
             page.set_content(rendered_html, wait_until="load")
@@ -542,7 +658,7 @@ def download_pdf():
         # Forward resume via email in the background if email is provided
         user_email = personal.get('email')
         if user_email:
-            run_in_background(send_email_with_attachment, user_email, pdf_content, filename)
+            run_in_background(send_email_with_attachment, user_email, pdf_content, filename, personal.get('name'))
             
         return send_file(
             pdf_file,
@@ -807,7 +923,23 @@ def download_pdf_by_id(resume_id):
         # Generate PDF using Playwright
         pdf_content = None
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            exec_path = os.getenv('PLAYWRIGHT_EXECUTABLE_PATH')
+            if not exec_path and os.path.exists('/usr/bin/chromium'):
+                exec_path = '/usr/bin/chromium'
+            
+            launch_args = os.getenv('PLAYWRIGHT_ARGS')
+            if launch_args:
+                launch_args = launch_args.split(',')
+            elif exec_path == '/usr/bin/chromium':
+                launch_args = ['--disable-gpu', '--no-sandbox']
+            else:
+                launch_args = None
+
+            browser = p.chromium.launch(
+                headless=True,
+                executable_path=exec_path,
+                args=launch_args
+            )
             page = browser.new_page()
             page.set_content(rendered_html, wait_until="load")
             pdf_content = page.pdf(
@@ -825,7 +957,7 @@ def download_pdf_by_id(resume_id):
         # Forward resume via email in the background if email is provided
         user_email = personal.get('email')
         if user_email:
-            run_in_background(send_email_with_attachment, user_email, pdf_content, filename)
+            run_in_background(send_email_with_attachment, user_email, pdf_content, filename, personal.get('name'))
             
         return send_file(
             BytesIO(pdf_content),
@@ -868,6 +1000,37 @@ def submit_feedback():
     except Exception as e:
         logger.error(f"Error submitting feedback: {e}")
         return json.dumps({"status": "error", "message": str(e)}), 500
+
+@app.route('/debug-env')
+def debug_env():
+    import subprocess
+    results = {}
+    
+    # Check common executable paths
+    paths_to_check = [
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chrome'
+    ]
+    for p in paths_to_check:
+        results[p] = os.path.exists(p)
+        
+    # Run which commands
+    for cmd in ['chromium', 'chromium-browser', 'google-chrome', 'chrome']:
+        try:
+            path = subprocess.check_output(['which', cmd], stderr=subprocess.STDOUT).decode('utf-8').strip()
+            results[f'which {cmd}'] = path
+        except Exception as e:
+            results[f'which {cmd}'] = f"Error: {e}"
+            
+    # Also get python version and system image / os info
+    try:
+        results['uname'] = subprocess.check_output(['uname', '-a']).decode('utf-8').strip()
+    except Exception as e:
+        results['uname'] = str(e)
+        
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5003)
