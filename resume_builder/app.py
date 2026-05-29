@@ -13,15 +13,12 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_auth_requests
 import uuid
 import csv
-from pymongo import MongoClient
-import gridfs
 import base64
 from playwright.sync_api import sync_playwright
-from bson.objectid import ObjectId
 from dotenv import load_dotenv
-import certifi
 import smtplib
 from email.message import EmailMessage
+import threading
 
 # Load environment variables from the same directory as this file
 from pathlib import Path
@@ -57,67 +54,220 @@ ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
-# MongoDB Config
-MONGO_URI = os.environ.get("MONGO_URI")
-# Standard Atlas connection configuration
-client = MongoClient(
-    MONGO_URI,
-    tlsCAFile=certifi.where(),
-    serverSelectionTimeoutMS=5000
-)
-# MongoDB Collections
-db = client['resume_builder']
-resumes_col = db['resumes']
-stats_col = db['stats']
-users_col = db['users']
-logs_col = db['logs']
-feedback_col = db['feedback']
+# JSON Database Helper for Local Thread-Safe Storage
+class JSONDatabase:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.resumes_path = 'data/resumes.json'
+        self.stats_path = 'data/stats.json'
+        self.users_path = 'data/users.json'
+        self.feedback_path = 'data/feedback.json'
+        self.logs_path = 'data/logs.json'
+        
+        # Ensure files exist
+        for path in [self.resumes_path, self.stats_path, self.users_path, self.feedback_path, self.logs_path]:
+            if not os.path.exists(path):
+                # stats and users are dict-based, others are list-based
+                default_content = {} if path in [self.stats_path, self.users_path] else []
+                try:
+                    with open(path, 'w') as f:
+                        json.dump(default_content, f, indent=4)
+                except Exception as e:
+                    print(f"Error creating file {path}: {e}")
 
+    def _read(self, path):
+        try:
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    return json.load(f)
+        except Exception as e:
+            logger.error(f"Error reading JSON file {path}: {e}")
+        return {} if path in [self.stats_path, self.users_path] else []
 
-fs = gridfs.GridFS(db)
+    def _write(self, path, data):
+        try:
+            with open(path, 'w') as f:
+                json.dump(data, f, indent=4)
+        except Exception as e:
+            logger.error(f"Error writing JSON file {path}: {e}")
 
-def migrate_data():
-    """Migrate all data including PDFs to MongoDB Cluster"""
-    try:
-        # 1. Migrate Resumes & Users
-        if os.path.exists(JSON_FILE_PATH):
-            with open(JSON_FILE_PATH, 'r') as f:
-                resumes = json.load(f)
-                if resumes and isinstance(resumes, list):
-                    if resumes_col.count_documents({}) == 0:
-                        resumes_col.insert_many(resumes)
-                        logger.info(f"Migrated {len(resumes)} resumes to MongoDB")
-                        
-                        users = {}
-                        for r in resumes:
-                            email = r.get('user_email')
-                            if email and email not in users:
-                                users[email] = {
-                                    "_id": email,
-                                    "name": r.get('user_name', 'User'),
-                                    "last_seen": r.get('timestamp')
-                                }
-                        if users:
-                            for user_data in users.values():
-                                users_col.update_one({"_id": user_data["_id"]}, {"$set": user_data}, upsert=True)
-                            logger.info(f"Migrated {len(users)} users to MongoDB")
-            
-        # 2. Migrate Stats
-        if os.path.exists(STATS_FILE_PATH):
-            with open(STATS_FILE_PATH, 'r') as f:
-                stats = json.load(f)
-                if stats and isinstance(stats, dict):
-                    if stats_col.count_documents({}) == 0:
-                        for day, data in stats.items():
-                            data['_id'] = day
-                            stats_col.insert_one(data)
-                        logger.info("Migrated stats to MongoDB")
+    # --- Resumes ---
+    def get_resumes_by_user(self, email):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            return [r for r in resumes if r.get('user_email') == email]
 
-    except Exception as e:
-        logger.error(f"Migration error: {e}")
+    def get_resume_by_id(self, resume_id, email):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            for r in resumes:
+                if r.get('_id') == resume_id and r.get('user_email') == email:
+                    return r
+            return None
 
-# Run migration if needed (comment out after first successful run)
-# migrate_data()
+    def get_latest_resume(self, email):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            user_resumes = [r for r in resumes if r.get('user_email') == email]
+            if not user_resumes:
+                return None
+            user_resumes.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            return user_resumes[0]
+
+    def save_resume(self, resume_id, form_data):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            if resume_id:
+                for r in resumes:
+                    if r.get('_id') == resume_id and r.get('user_email') == form_data.get('user_email'):
+                        r.update(form_data)
+                        self._write(self.resumes_path, resumes)
+                        return resume_id
+            new_id = uuid.uuid4().hex
+            form_data['_id'] = new_id
+            resumes.append(form_data)
+            self._write(self.resumes_path, resumes)
+            return new_id
+
+    def delete_resume(self, resume_id, email):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            new_resumes = [r for r in resumes if not (r.get('_id') == resume_id and r.get('user_email') == email)]
+            if len(new_resumes) != len(resumes):
+                self._write(self.resumes_path, new_resumes)
+                return True
+            return False
+
+    def count_resumes(self):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            return len(resumes)
+
+    def get_all_resumes_paginated(self, page, per_page):
+        with self.lock:
+            resumes = self._read(self.resumes_path)
+            resumes.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            start = (page - 1) * per_page
+            return resumes[start:start+per_page]
+
+    # --- Users ---
+    def update_user(self, email, name, google_id):
+        with self.lock:
+            users = self._read(self.users_path)
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            is_returning = email in users
+            if is_returning:
+                users[email]['name'] = name
+                users[email]['google_id'] = google_id
+                users[email]['last_seen'] = now_str
+            else:
+                users[email] = {
+                    'name': name,
+                    'google_id': google_id,
+                    'last_seen': now_str,
+                    'created_at': now_str
+                }
+            self._write(self.users_path, users)
+            return is_returning
+
+    def get_user(self, email):
+        with self.lock:
+            users = self._read(self.users_path)
+            user = users.get(email)
+            if user:
+                user['_id'] = email
+            return user
+
+    def count_users(self):
+        with self.lock:
+            users = self._read(self.users_path)
+            return len(users)
+
+    def get_all_users_paginated(self, page, per_page):
+        with self.lock:
+            users = self._read(self.users_path)
+            user_list = []
+            for email, u in users.items():
+                u_copy = u.copy()
+                u_copy['_id'] = email
+                u_copy['email'] = email
+                user_list.append(u_copy)
+            user_list.sort(key=lambda x: x.get('last_seen', ''), reverse=True)
+            start = (page - 1) * per_page
+            return user_list[start:start+per_page]
+
+    # --- Stats ---
+    def track_stat(self, stat_key):
+        with self.lock:
+            stats = self._read(self.stats_path)
+            today = datetime.now().strftime("%Y-%m-%d")
+            if today not in stats:
+                stats[today] = {}
+            stats[today][stat_key] = stats[today].get(stat_key, 0) + 1
+            self._write(self.stats_path, stats)
+
+    def get_all_stats(self):
+        with self.lock:
+            stats = self._read(self.stats_path)
+            result = []
+            for day, s in stats.items():
+                s_copy = s.copy()
+                s_copy['_id'] = day
+                result.append(s_copy)
+            return result
+
+    # --- Logs ---
+    def log_event(self, event_type, email, data=None):
+        with self.lock:
+            logs = self._read(self.logs_path)
+            log_entry = {
+                "event": event_type,
+                "email": email,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "data": data or {}
+            }
+            logs.append(log_entry)
+            self._write(self.logs_path, logs)
+
+    def count_logs(self):
+        with self.lock:
+            logs = self._read(self.logs_path)
+            return len(logs)
+
+    def get_all_logs_paginated(self, page, per_page):
+        with self.lock:
+            logs = self._read(self.logs_path)
+            logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            start = (page - 1) * per_page
+            return logs[start:start+per_page]
+
+    def cleanup_old_logs(self):
+        from datetime import timedelta
+        cutoff = datetime.now() - timedelta(days=15)
+        cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
+        with self.lock:
+            logs = self._read(self.logs_path)
+            new_logs = [l for l in logs if l.get('timestamp', '') >= cutoff_str]
+            deleted_count = len(logs) - len(new_logs)
+            if deleted_count > 0:
+                self._write(self.logs_path, new_logs)
+            return deleted_count
+
+    # --- Feedback ---
+    def save_feedback(self, feedback):
+        with self.lock:
+            feedbacks = self._read(self.feedback_path)
+            feedbacks.append(feedback)
+            self._write(self.feedback_path, feedbacks)
+
+    def get_all_feedback(self):
+        with self.lock:
+            feedbacks = self._read(self.feedback_path)
+            feedbacks.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            return feedbacks
+
+# Initialize JSON Database
+db = JSONDatabase()
 
 def send_email_with_attachment(to_email, pdf_bytes, filename):
     sender_email = os.environ.get('SENDER_EMAIL')
@@ -147,40 +297,24 @@ def send_email_with_attachment(to_email, pdf_bytes, filename):
         return False
 
 def track_stat(stat_key):
-    """Track daily statistics in MongoDB with graceful failure"""
+    """Track daily statistics in local JSON database with graceful failure"""
     try:
-        today = datetime.now().strftime("%Y-%m-%d")
-        stats_col.update_one(
-            {"_id": today},
-            {"$inc": {stat_key: 1}},
-            upsert=True
-        )
+        db.track_stat(stat_key)
     except Exception as e:
         logger.error(f"Error tracking stat {stat_key}: {e} (Continuing without tracking)")
 
 def cleanup_old_logs():
     """Delete logs older than 15 days"""
     try:
-        from datetime import timedelta
-        cutoff = datetime.now() - timedelta(days=15)
-        # Assuming timestamp is stored as ISO string or datetime
-        # For simplicity, we'll use a string comparison if stored as YYYY-MM-DD
-        cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
-        result = logs_col.delete_many({"timestamp": {"$lt": cutoff_str}})
-        logger.info(f"Cleaned up {result.deleted_count} old logs")
+        deleted_count = db.cleanup_old_logs()
+        logger.info(f"Cleaned up {deleted_count} old logs")
     except Exception as e:
         logger.error(f"Error cleaning up logs: {e}")
 
 def log_event(event_type, email, data=None):
     """Log an event with user email and data (including location)"""
     try:
-        log_entry = {
-            "event": event_type,
-            "email": email,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "data": data or {}
-        }
-        logs_col.insert_one(log_entry)
+        db.log_event(event_type, email, data)
         # Run cleanup occasionally
         if datetime.now().minute % 15 == 0: # Check every 15 mins
             run_in_background(cleanup_old_logs)
@@ -209,7 +343,7 @@ def admin_required(f):
     return decorated_function
 
 def save_to_json_backup(data):
-    """Local JSON backup in case MongoDB fails"""
+    """Local JSON backup fallback method"""
     try:
         existing_data = []
         if os.path.exists(JSON_FILE_PATH):
@@ -226,16 +360,16 @@ def save_to_json_backup(data):
         logger.error(f"Backup failed: {e}")
 
 def save_to_db(data):
-    """Save resume data to MongoDB with local JSON fallback"""
+    """Save resume data to local database"""
     try:
         # Add session user info if logged in
         data['user_email'] = session.get('user_email')
         data['user_name'] = session.get('user_name')
         
-        resumes_col.insert_one(data)
-        logger.info("Data saved successfully to MongoDB")
+        db.save_resume(None, data)
+        logger.info("Data saved successfully to JSON database")
     except Exception as e:
-        logger.error(f"MongoDB save failed, falling back to local JSON: {e}")
+        logger.error(f"Save failed, falling back to local JSON: {e}")
         save_to_json_backup(data)
 
 def validate_form_data(form_data):
@@ -259,8 +393,6 @@ def format_url(url):
     return url
 
 
-import threading
-
 def run_in_background(f, *args, **kwargs):
     """Run a function in a background thread"""
     threading.Thread(target=f, args=args, kwargs=kwargs).start()
@@ -278,9 +410,7 @@ def dashboard():
         return redirect(url_for('index'))
     
     try:
-        resumes = list(resumes_col.find({"user_email": session.get('user_email')}).sort('timestamp', -1))
-        for r in resumes:
-            if '_id' in r: r['_id'] = str(r['_id'])
+        resumes = db.get_resumes_by_user(session.get('user_email'))
         return render_template('dashboard.html', resumes=resumes)
     except Exception as e:
         logger.error(f"Error loading dashboard: {e}")
@@ -301,18 +431,14 @@ def thank_you():
 
 @app.route('/get_resume/<resume_id>')
 def get_resume(resume_id):
-    """Fetch a specific resume data from MongoDB"""
+    """Fetch a specific resume data from JSON database"""
     try:
         if not session.get('user_email'):
             return json.dumps({"status": "error", "message": "Unauthorized"}), 401
             
-        resume = resumes_col.find_one({
-            "_id": ObjectId(resume_id),
-            "user_email": session.get('user_email')
-        })
+        resume = db.get_resume_by_id(resume_id, session.get('user_email'))
         
         if resume:
-            resume['_id'] = str(resume['_id'])
             return json.dumps(resume)
         return json.dumps({"status": "error", "message": "Not found"}), 404
     except Exception as e:
@@ -321,14 +447,13 @@ def get_resume(resume_id):
 
 @app.route('/last_resume')
 def last_resume():
-    """Fetch the latest saved resume data from MongoDB"""
+    """Fetch the latest saved resume data from JSON database"""
     try:
         if not session.get('user_email'):
             return json.dumps({})
             
-        last = resumes_col.find_one({"user_email": session.get('user_email')}, sort=[('timestamp', -1)])
+        last = db.get_latest_resume(session.get('user_email'))
         if last:
-            last['_id'] = str(last['_id'])
             return json.dumps(last)
         return json.dumps({})
     except Exception as e:
@@ -337,7 +462,7 @@ def last_resume():
 
 @app.route('/save', methods=['POST'])
 def save_data():
-    """Save resume data to MongoDB (Update if resume_id exists, else Insert)"""
+    """Save resume data to JSON database (Update if resume_id exists, else Insert)"""
     try:
         data = request.get_json()
         resume_id = data.get('resume_id')
@@ -351,15 +476,7 @@ def save_data():
         }
         validate_form_data(form_data)
         
-        if resume_id:
-            resumes_col.update_one(
-                {"_id": ObjectId(resume_id), "user_email": session.get('user_email')},
-                {"$set": form_data}
-            )
-            inserted_id = resume_id
-        else:
-            result = resumes_col.insert_one(form_data)
-            inserted_id = str(result.inserted_id)
+        inserted_id = db.save_resume(resume_id, form_data)
             
         run_in_background(track_stat, "form_starts")
         return json.dumps({"status": "success", "message": "Data saved successfully", "resume_id": inserted_id})
@@ -369,7 +486,7 @@ def save_data():
 
 @app.route('/download-pdf', methods=['POST'])
 def download_pdf():
-    """Generate and download PDF using WeasyPrint"""
+    """Generate and download PDF using Playwright"""
     try:
         data = request.get_json()
         if not data:
@@ -462,24 +579,11 @@ def auth_google():
         session.permanent = True
         
         # Check if user exists
-        existing_user = users_col.find_one({"_id": email})
+        existing_user = db.get_user(email)
         is_returning = existing_user is not None
         
-        # Update or Insert user in MongoDB
-        users_col.update_one(
-            {"_id": email},
-            {
-                "$set": {
-                    "name": name,
-                    "google_id": userid,
-                    "last_seen": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                },
-                "$setOnInsert": {
-                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-            },
-            upsert=True
-        )
+        # Update or Insert user in JSON database
+        db.update_user(email, name, userid)
         
         return json.dumps({
             "status": "success", 
@@ -496,7 +600,7 @@ def auth_google():
 @app.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
-    """Admin dashboard showing all resumes and users from MongoDB"""
+    """Admin dashboard showing all resumes and users from JSON database"""
     try:
         # Pagination parameters
         res_page = int(request.args.get('res_page', 1))
@@ -505,28 +609,34 @@ def admin_dashboard():
         per_page = int(request.args.get('per_page', 25))
 
         # Fetch resumes
-        res_total = resumes_col.count_documents({})
-        resumes = list(resumes_col.find().sort('timestamp', -1).skip((res_page-1)*per_page).limit(per_page))
+        res_total = db.count_resumes()
+        resumes = db.get_all_resumes_paginated(res_page, per_page)
+        resumes_display = []
         for r in resumes:
-            if '_id' in r: r.pop('_id')
+            r_copy = r.copy()
+            if '_id' in r_copy: r_copy.pop('_id')
+            resumes_display.append(r_copy)
             
         # Fetch users
-        u_total = users_col.count_documents({})
-        users = list(users_col.find().sort('last_seen', -1).skip((u_page-1)*per_page).limit(per_page))
+        u_total = db.count_users()
+        users = db.get_all_users_paginated(u_page, per_page)
+        users_display = []
         for u in users:
-            u['email'] = u.get('_id')
-            if '_id' in u: u.pop('_id')
+            u_copy = u.copy()
+            u_copy['email'] = u_copy.get('_id')
+            if '_id' in u_copy: u_copy.pop('_id')
+            users_display.append(u_copy)
 
         # Fetch logs
-        l_total = logs_col.count_documents({})
-        logs = list(logs_col.find().sort('timestamp', -1).skip((l_page-1)*per_page).limit(per_page))
+        l_total = db.count_logs()
+        logs = db.get_all_logs_paginated(l_page, per_page)
         
         # Fetch feedbacks
-        feedbacks = list(feedback_col.find().sort('timestamp', -1))
+        feedbacks = db.get_all_feedback()
 
         return render_template('admin_dashboard.html', 
-                             resumes=resumes, res_total=res_total, res_page=res_page,
-                             users=users, u_total=u_total, u_page=u_page,
+                             resumes=resumes_display, res_total=res_total, res_page=res_page,
+                             users=users_display, u_total=u_total, u_page=u_page,
                              logs=logs, l_total=l_total, l_page=l_page,
                              feedbacks=feedbacks, per_page=per_page)
     except Exception as e:
@@ -547,9 +657,9 @@ def logout():
 @app.route('/admin/stats')
 @admin_required
 def admin_stats():
-    """Get statistics for admin dashboard from MongoDB"""
+    """Get statistics for admin dashboard from JSON database"""
     try:
-        stats = list(stats_col.find())
+        stats = db.get_all_stats()
         
         total_visits = 0
         total_generated = 0
@@ -563,7 +673,7 @@ def admin_stats():
             total_generated += s.get('resumes_generated', 0)
             total_starts += s.get('form_starts', 0)
             
-        total_users = users_col.count_documents({})
+        total_users = db.count_users()
         
         total_stats = {
             "total_visits": total_visits,
@@ -580,9 +690,9 @@ def admin_stats():
 @app.route('/admin/export-csv')
 @admin_required
 def export_csv():
-    """Export all resume data from MongoDB to a CSV file"""
+    """Export all resume data from JSON database to a CSV file"""
     try:
-        resumes = list(resumes_col.find().sort('timestamp', -1))
+        resumes = db.get_all_resumes_paginated(1, 1000000)
         
         if not resumes:
             return "No data found", 404
@@ -622,9 +732,9 @@ def export_csv():
 @app.route('/admin/export-users-csv')
 @admin_required
 def export_users_csv():
-    """Export all user data from MongoDB to a CSV file"""
+    """Export all user data from JSON database to a CSV file"""
     try:
-        users = list(users_col.find().sort('last_seen', -1))
+        users = db.get_all_users_paginated(1, 1000000)
         
         if not users:
             return "No data found", 404
@@ -660,15 +770,12 @@ def export_users_csv():
 
 @app.route('/download-pdf/<resume_id>')
 def download_pdf_by_id(resume_id):
-    """Generate and download PDF from stored data in MongoDB"""
+    """Generate and download PDF from stored data in JSON database"""
     try:
         if not session.get('user_email'):
             return "Unauthorized", 401
             
-        resume = resumes_col.find_one({
-            "_id": ObjectId(resume_id),
-            "user_email": session.get('user_email')
-        })
+        resume = db.get_resume_by_id(resume_id, session.get('user_email'))
         
         if not resume:
             return "Resume not found", 404
@@ -733,21 +840,21 @@ def download_pdf_by_id(resume_id):
 
 @app.route('/delete-resume/<resume_id>', methods=['DELETE'])
 def delete_resume(resume_id):
-    """Delete a resume from database"""
+    """Delete a resume from JSON database"""
     if not session.get('user_email'):
         return "Unauthorized", 401
     
     try:
-        # Verify ownership and delete
-        resumes_col.delete_one({"_id": ObjectId(resume_id), "user_email": session.get('user_email')})
-        return "Success", 200
+        if db.delete_resume(resume_id, session.get('user_email')):
+            return "Success", 200
+        return "Not found or unauthorized", 404
     except Exception as e:
         logger.error(f"Error deleting resume: {e}")
         return str(e), 500
 
 @app.route('/submit-feedback', methods=['POST'])
 def submit_feedback():
-    """Submit user feedback to MongoDB"""
+    """Submit user feedback to local database"""
     try:
         data = request.get_json()
         feedback = {
@@ -756,7 +863,7 @@ def submit_feedback():
             'comment': data.get('comment'),
             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
-        feedback_col.insert_one(feedback)
+        db.save_feedback(feedback)
         return json.dumps({"status": "success"})
     except Exception as e:
         logger.error(f"Error submitting feedback: {e}")
