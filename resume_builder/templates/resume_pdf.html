@@ -36,8 +36,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: nowrap;
-            gap: 12pt;
+            flex-wrap: wrap;
             font-size: 10pt;
             margin-bottom: 8pt;
             padding-bottom: 2pt;
@@ -86,7 +85,11 @@
             line-height: 1.1;
             display: flex;
             align-items: center;
-            gap: 6pt;
+            margin-bottom: 4pt;
+        }
+
+        .r-sub-title span.title-text {
+            margin-right: 6pt;
         }
 
         .r-content {
@@ -123,7 +126,6 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            gap: 6pt;
             margin-bottom: 1pt;
         }
 
@@ -131,6 +133,7 @@
             font-weight: bold;
             font-size: 12pt;
             flex: 1;
+            margin-right: 6pt;
         }
 
         .entry-date {
@@ -146,9 +149,9 @@
         }
 
         .contact-item {
-            display: inline-flex;
+            display: inline-block;
             align-items: center;
-            gap: 2pt;
+            margin: 0 8pt;
             white-space: nowrap;
         }
 
@@ -156,6 +159,7 @@
             width: 11pt;
             height: 11pt;
             vertical-align: middle;
+            margin-right: 4pt;
         }
     </style>
 </head>
