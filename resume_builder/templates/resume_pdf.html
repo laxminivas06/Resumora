@@ -151,8 +151,13 @@
         .contact-item {
             display: inline-block;
             align-items: center;
-            margin: 0 8pt;
             white-space: nowrap;
+        }
+
+        .contact-item + .contact-item::before {
+            content: "|";
+            margin: 0 4pt;
+            color: #555;
         }
 
         .contact-icon {

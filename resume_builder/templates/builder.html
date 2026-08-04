@@ -253,8 +253,13 @@
         .contact-item {
             display: flex;
             align-items: center;
-            margin: 0 8px;
             white-space: nowrap;
+        }
+
+        .contact-item + .contact-item::before {
+            content: "|";
+            margin: 0 4px;
+            color: #555;
         }
 
         .contact-item i, .contact-item svg, .contact-icon {
@@ -1573,7 +1578,7 @@
             if (personal.github) items.push(`<div class="contact-item"><img src="/static/icons/github.png" style="${iconStyle}"><a href="${escapeHtml(personal.github)}" target="_blank">GitHub</a></div>`);
             if (personal.portfolio) items.push(`<div class="contact-item"><img src="/static/icons/website.png" style="${iconStyle}"><a href="${escapeHtml(personal.portfolio)}" target="_blank">Website</a></div>`);
             
-            return items.join('<span class="sep"> | </span>');
+            return items.join('');
         }
 
         function buildEducationHTML(eduList, title = 'Education') {
