@@ -14,7 +14,12 @@ from google.auth.transport import requests as google_auth_requests
 import uuid
 import csv
 import base64
-from playwright.sync_api import sync_playwright
+import os
+# Fix for WeasyPrint on macOS Apple Silicon finding Homebrew libraries
+if os.path.exists('/opt/homebrew/lib'):
+    os.environ['DYLD_FALLBACK_LIBRARY_PATH'] = '/opt/homebrew/lib' + (':' + os.environ.get('DYLD_FALLBACK_LIBRARY_PATH', '') if os.environ.get('DYLD_FALLBACK_LIBRARY_PATH') else '')
+
+from weasyprint import HTML
 from dotenv import load_dotenv
 import smtplib
 from email.message import EmailMessage
@@ -271,7 +276,7 @@ db = JSONDatabase()
 
 def send_email_with_attachment(to_email, pdf_bytes, filename, user_name=None):
     sender_email = 'hello.aivontraa@gmail.com'
-    sender_password = 'vwfd kppd xefb mboc'
+    sender_password = 'lfwp ykno bhge gduw'
     
     if not to_email:
         logger.error("Recipient email is missing")
@@ -616,36 +621,8 @@ def download_pdf():
             icons=icons
         )
         
-        # Generate PDF using Playwright
-        pdf_content = None
-        with sync_playwright() as p:
-            exec_path = os.getenv('PLAYWRIGHT_EXECUTABLE_PATH')
-            if not exec_path and os.path.exists('/usr/bin/chromium'):
-                exec_path = '/usr/bin/chromium'
-            
-            launch_args = os.getenv('PLAYWRIGHT_ARGS')
-            if launch_args:
-                launch_args = launch_args.split(',')
-            elif exec_path == '/usr/bin/chromium':
-                launch_args = ['--disable-gpu', '--no-sandbox']
-            else:
-                launch_args = None
-
-            browser = p.chromium.launch(
-                headless=True,
-                executable_path=exec_path,
-                args=launch_args
-            )
-            page = browser.new_page()
-            # Set content and wait for images/fonts to load
-            page.set_content(rendered_html, wait_until="load")
-            # Generate PDF with A4 settings
-            pdf_content = page.pdf(
-                format="A4",
-                print_background=True,
-                margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"}
-            )
-            browser.close()
+        # Generate PDF using WeasyPrint
+        pdf_content = HTML(string=rendered_html, base_url=request.host_url).write_pdf()
             
         if not pdf_content:
             return "Failed to generate PDF", 500
@@ -934,34 +911,8 @@ def download_pdf_by_id(resume_id):
             icons=icons
         )
         
-        # Generate PDF using Playwright
-        pdf_content = None
-        with sync_playwright() as p:
-            exec_path = os.getenv('PLAYWRIGHT_EXECUTABLE_PATH')
-            if not exec_path and os.path.exists('/usr/bin/chromium'):
-                exec_path = '/usr/bin/chromium'
-            
-            launch_args = os.getenv('PLAYWRIGHT_ARGS')
-            if launch_args:
-                launch_args = launch_args.split(',')
-            elif exec_path == '/usr/bin/chromium':
-                launch_args = ['--disable-gpu', '--no-sandbox']
-            else:
-                launch_args = None
-
-            browser = p.chromium.launch(
-                headless=True,
-                executable_path=exec_path,
-                args=launch_args
-            )
-            page = browser.new_page()
-            page.set_content(rendered_html, wait_until="load")
-            pdf_content = page.pdf(
-                format="A4",
-                print_background=True,
-                margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"}
-            )
-            browser.close()
+        # Generate PDF using WeasyPrint
+        pdf_content = HTML(string=rendered_html, base_url=request.host_url).write_pdf()
             
         if not pdf_content:
             return "Failed to generate PDF", 500

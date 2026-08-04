@@ -2001,11 +2001,8 @@
 
         // ── AUTO-LOAD RESUME ──
         window.onload = async () => {
-            // Restore step
+            // Restore step variables
             const savedStep = localStorage.getItem('currentStep');
-            if (savedStep) {
-                nextStep(parseInt(savedStep));
-            }
 
             try {
                 // If editing specific resume, load that. Else load last saved.
@@ -2068,6 +2065,12 @@
                         }
                     }
                 }
+                
+                // After data is loaded, restore the step (this ensures preview works on refresh)
+                if (savedStep) {
+                    nextStep(parseInt(savedStep));
+                }
+
             } catch (e) {
                 console.warn('Could not load last resume:', e);
             }

@@ -3,6 +3,6 @@ requests
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
-playwright
+weasyprint
 python-dotenv
 gunicorn
