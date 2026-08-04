@@ -48,8 +48,8 @@ def add_header(response):
 JSON_FILE_PATH = 'data/resumes.json'
 STATS_FILE_PATH = 'data/stats.json'
 PDF_DIR = 'data/pdfs'
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin@resumora.com')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'hello.aivontraa.com')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'nivas@2026')
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
@@ -711,7 +711,21 @@ def auth_google():
         return json.dumps({"status": "error", "message": str(e)}), 401
 
 
-
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            flash('Logged in successfully', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid username or password', 'error')
+            
+    return render_template('admin_login.html')
 
 @app.route('/admin-dashboard')
 @admin_required
