@@ -224,9 +224,83 @@
                                                     </div>
                                                     <hr>
                                                     <h6>Professional Summary</h6>
-                                                    <div class="bg-light p-3 rounded" style="white-space: pre-wrap; font-size: 0.95rem;">
-                                                        {{ resume.professional_details.summary|striptags if resume.professional_details.summary else 'N/A' }}
+                                                    <div class="bg-light p-3 rounded" style="font-size: 0.95rem;">
+                                                        {{ resume.professional_details.summary|safe if resume.professional_details.summary else 'N/A' }}
                                                     </div>
+                                                    
+                                                    {% if resume.professional_details.education %}
+                                                    <hr>
+                                                    <h6>Education</h6>
+                                                    <ul class="list-group list-group-flush small">
+                                                        {% for edu in resume.professional_details.education %}
+                                                        <li class="list-group-item bg-light border-0 mb-1 rounded">
+                                                            <strong>{{ edu.institution }}</strong> {% if edu.dates %}({{ edu.dates }}){% endif %}<br>
+                                                            {{ edu.degree }} {% if edu.score %}| {{ edu.score }}{% endif %}
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    {% endif %}
+
+                                                    {% if resume.professional_details.work_experience %}
+                                                    <hr>
+                                                    <h6>Work Experience</h6>
+                                                    <ul class="list-group list-group-flush small">
+                                                        {% for exp in resume.professional_details.work_experience %}
+                                                        <li class="list-group-item bg-light border-0 mb-1 rounded">
+                                                            <strong>{{ exp.company }}</strong> {% if exp.dates %}({{ exp.dates }}){% endif %}<br>
+                                                            <em>{{ exp.role }}</em>
+                                                            {% if exp.description %}
+                                                            <div class="mt-1 text-muted">{{ exp.description|safe }}</div>
+                                                            {% endif %}
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    {% endif %}
+
+                                                    {% if resume.professional_details.projects %}
+                                                    <hr>
+                                                    <h6>Projects</h6>
+                                                    <ul class="list-group list-group-flush small">
+                                                        {% for proj in resume.professional_details.projects %}
+                                                        <li class="list-group-item bg-light border-0 mb-1 rounded">
+                                                            <strong>{{ proj.name }}</strong>
+                                                            {% if proj.description %}
+                                                            <div class="mt-1 text-muted">{{ proj.description|safe }}</div>
+                                                            {% endif %}
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    {% endif %}
+
+                                                    {% if resume.professional_details.technical_skills %}
+                                                    <hr>
+                                                    <h6>Technical Skills</h6>
+                                                    <div class="bg-light p-2 rounded small">{{ resume.professional_details.technical_skills|safe }}</div>
+                                                    {% endif %}
+
+                                                    {% if resume.professional_details.non_technical_skills %}
+                                                    <hr>
+                                                    <h6>Non-Technical Skills</h6>
+                                                    <div class="bg-light p-2 rounded small">{{ resume.professional_details.non_technical_skills|safe }}</div>
+                                                    {% endif %}
+
+                                                    {% if resume.professional_details.certifications %}
+                                                    <hr>
+                                                    <h6>Certifications</h6>
+                                                    <div class="bg-light p-2 rounded small">{{ resume.professional_details.certifications|safe }}</div>
+                                                    {% endif %}
+
+                                                    {% if resume.professional_details.achievements %}
+                                                    <hr>
+                                                    <h6>Achievements</h6>
+                                                    <div class="bg-light p-2 rounded small">{{ resume.professional_details.achievements|safe }}</div>
+                                                    {% endif %}
+                                                    
+                                                    {% if resume.professional_details.extracurricular_activities %}
+                                                    <hr>
+                                                    <h6>Extracurricular Activities</h6>
+                                                    <div class="bg-light p-2 rounded small">{{ resume.professional_details.extracurricular_activities|safe }}</div>
+                                                    {% endif %}
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
