@@ -293,21 +293,82 @@ class JSONDatabase:
             return latest
 
     # ------------------------------------------------------------------
-    # Users Operations
+    # Users Operations (Deduplicated Unique Accounts)
     # ------------------------------------------------------------------
+    def _get_consolidated_users_map(self):
+        """
+        Deduplicate and consolidate unique accounts.
+        Normalizes all emails to lowercase/stripped.
+        If an account has multiple records, consolidates them using the latest valid information.
+        Preserves different accounts even if their names are identical.
+        Also includes accounts that exist in resumes.
+        """
+        raw_users = self._read(self.users_path)
+        raw_resumes = self._read(self.resumes_path)
+
+        consolidated = {}
+        for raw_email, u in raw_users.items():
+            clean = (raw_email or '').strip().lower()
+            if not clean:
+                continue
+            if clean not in consolidated:
+                consolidated[clean] = {
+                    'email': clean,
+                    'name': (u.get('name') or '').strip(),
+                    'google_id': u.get('google_id', ''),
+                    'last_seen': u.get('last_seen', ''),
+                    'created_at': u.get('created_at', '')
+                }
+            else:
+                c = consolidated[clean]
+                if not c['name'] and u.get('name'):
+                    c['name'] = u.get('name').strip()
+                if not c['google_id'] and u.get('google_id'):
+                    c['google_id'] = u.get('google_id')
+                c['last_seen'] = max(c['last_seen'], u.get('last_seen', ''))
+                c['created_at'] = min(c['created_at'] or '9999', u.get('created_at', '') or '9999')
+
+        for r in raw_resumes:
+            clean = (r.get('user_email') or r.get('personal_details', {}).get('email') or '').strip().lower()
+            if not clean:
+                continue
+            r_name = (r.get('user_name') or r.get('personal_details', {}).get('name') or '').strip()
+            r_ts = r.get('timestamp', '')
+            if clean not in consolidated:
+                consolidated[clean] = {
+                    'email': clean,
+                    'name': r_name,
+                    'google_id': '',
+                    'last_seen': r_ts,
+                    'created_at': r_ts
+                }
+            else:
+                c = consolidated[clean]
+                if not c['name'] and r_name:
+                    c['name'] = r_name
+                if r_ts:
+                    c['last_seen'] = max(c['last_seen'], r_ts)
+
+        return consolidated
+
     def update_user(self, email, name, google_id):
+        if not email:
+            return False
+        clean = email.strip().lower()
         with self.lock:
             users = self._read(self.users_path)
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            is_returning = email in users
+            is_returning = clean in users
             if is_returning:
-                users[email]['name'] = name
-                users[email]['google_id'] = google_id
-                users[email]['last_seen'] = now_str
+                if name:
+                    users[clean]['name'] = name
+                if google_id:
+                    users[clean]['google_id'] = google_id
+                users[clean]['last_seen'] = now_str
             else:
-                users[email] = {
-                    'name': name,
-                    'google_id': google_id,
+                users[clean] = {
+                    'name': name or '',
+                    'google_id': google_id or '',
                     'last_seen': now_str,
                     'created_at': now_str
                 }
@@ -315,29 +376,27 @@ class JSONDatabase:
             return is_returning
 
     def get_user(self, email):
+        if not email:
+            return None
+        clean = email.strip().lower()
         with self.lock:
-            users = self._read(self.users_path)
-            user = users.get(email)
-            if user:
-                user = user.copy()
-                user['_id'] = email
-            return user
+            users_map = self._get_consolidated_users_map()
+            u = users_map.get(clean)
+            if u:
+                u_copy = u.copy()
+                u_copy['_id'] = clean
+                return u_copy
+            return None
 
     def count_users(self):
         with self.lock:
-            users = self._read(self.users_path)
-            return len(users)
+            return len(self._get_consolidated_users_map())
 
     def get_all_users_paginated(self, page, per_page):
         with self.lock:
-            users = self._read(self.users_path)
-            user_list = []
-            for email, u in users.items():
-                u_copy = u.copy()
-                u_copy['_id'] = email
-                u_copy['email'] = email
-                user_list.append(u_copy)
-            user_list.sort(key=lambda x: x.get('last_seen', ''), reverse=True)
+            users_map = self._get_consolidated_users_map()
+            user_list = list(users_map.values())
+            user_list.sort(key=lambda x: str(x.get('last_seen', '')), reverse=True)
             start = (page - 1) * per_page
             return user_list[start:start + per_page]
 
@@ -345,17 +404,15 @@ class JSONDatabase:
         counts = self.get_resume_counts_by_user()
         latest_dates = self.get_latest_resume_dates_by_user()
         with self.lock:
-            users = self._read(self.users_path)
+            users_map = self._get_consolidated_users_map()
             user_list = []
-            for email, u in users.items():
+            for clean_email, u in users_map.items():
                 u_copy = u.copy()
-                u_copy['_id'] = email
-                u_copy['email'] = email
-                email_clean = (email or '').strip().lower()
-                u_copy['resume_count'] = counts.get(email_clean, 0)
-                u_copy['latest_resume_date'] = latest_dates.get(email_clean, '—')
+                u_copy['_id'] = clean_email
+                u_copy['resume_count'] = counts.get(clean_email, 0)
+                u_copy['latest_resume_date'] = latest_dates.get(clean_email, '—')
                 user_list.append(u_copy)
-            user_list.sort(key=lambda x: x.get('last_seen', ''), reverse=True)
+            user_list.sort(key=lambda x: str(x.get('last_seen', '')), reverse=True)
             total = len(user_list)
             start = (page - 1) * per_page
             return user_list[start:start + per_page], total
@@ -421,19 +478,103 @@ class JSONDatabase:
             return deleted_count
 
     # ------------------------------------------------------------------
-    # Feedback Operations
+    # Feedback Operations (Deduplicated Submissions & Clean Management)
     # ------------------------------------------------------------------
     def save_feedback(self, feedback):
         with self.lock:
             feedbacks = self._read(self.feedback_path)
-            feedbacks.append(feedback)
+            clean_email = (feedback.get('email') or '').strip().lower()
+            rating = str(feedback.get('rating', '5'))
+            comment = (feedback.get('comment') or '').strip()
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Check if exact identical feedback was submitted recently (within 24 hours) by same user
+            duplicate_found = False
+            for fb in feedbacks:
+                fb_email = (fb.get('email') or '').strip().lower()
+                fb_rating = str(fb.get('rating', '5'))
+                fb_comment = (fb.get('comment') or '').strip()
+                if fb_email == clean_email and fb_rating == rating and fb_comment == comment:
+                    try:
+                        ts1 = datetime.strptime(fb.get('timestamp', ''), "%Y-%m-%d %H:%M:%S")
+                        ts2 = datetime.strptime(now_str, "%Y-%m-%d %H:%M:%S")
+                        if abs((ts2 - ts1).total_seconds()) < 86400:
+                            fb['timestamp'] = now_str
+                            fb['duplicate_count'] = fb.get('duplicate_count', 1) + 1
+                            duplicate_found = True
+                            break
+                    except Exception:
+                        pass
+
+            if not duplicate_found:
+                feedback['_id'] = uuid.uuid4().hex
+                feedback['email'] = clean_email
+                feedback['timestamp'] = feedback.get('timestamp') or now_str
+                feedback['duplicate_count'] = 1
+                feedbacks.append(feedback)
+
             self._write(self.feedback_path, feedbacks)
 
     def get_all_feedback(self):
+        """
+        Return clean, deduplicated feedback records.
+        Identifies exact duplicate submissions (same user, rating, comment within 24h)
+        while preserving legitimate multiple reviews from different dates or with different ratings/comments.
+        Enriches records with current user name.
+        """
         with self.lock:
-            feedbacks = self._read(self.feedback_path)
-            feedbacks.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-            return feedbacks
+            raw_feedbacks = self._read(self.feedback_path)
+            users_map = self._get_consolidated_users_map()
+
+            for fb in raw_feedbacks:
+                if not fb.get('_id'):
+                    fb['_id'] = uuid.uuid4().hex
+
+            groups = {}
+            for fb in raw_feedbacks:
+                email = (fb.get('email') or '').strip().lower()
+                rating = str(fb.get('rating', '5'))
+                comment = (fb.get('comment') or '').strip()
+                key = (email, rating, comment)
+                groups.setdefault(key, []).append(fb)
+
+            deduped = []
+            for key, items in groups.items():
+                items.sort(key=lambda x: str(x.get('timestamp', '')))
+                clusters = []
+                for it in items:
+                    ts_str = it.get('timestamp', '')
+                    try:
+                        ts = datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S')
+                    except Exception:
+                        ts = datetime.min
+                    if not clusters:
+                        clusters.append([it])
+                    else:
+                        prev_ts_str = clusters[-1][-1].get('timestamp', '')
+                        try:
+                            prev_ts = datetime.strptime(prev_ts_str, '%Y-%m-%d %H:%M:%S')
+                        except Exception:
+                            prev_ts = datetime.min
+                        if abs((ts - prev_ts).total_seconds()) < 86400:
+                            clusters[-1].append(it)
+                        else:
+                            clusters.append([it])
+
+                for c in clusters:
+                    chosen = c[-1].copy()
+                    clean_email = (chosen.get('email') or '').strip().lower()
+                    if not chosen.get('name') and clean_email in users_map:
+                        chosen['name'] = users_map[clean_email].get('name', '')
+                    total_dupes = sum(it.get('duplicate_count', 1) for it in c)
+                    chosen['duplicate_count'] = total_dupes
+                    deduped.append(chosen)
+
+            deduped.sort(key=lambda x: str(x.get('timestamp', '')), reverse=True)
+            return deduped
+
+    def count_feedback(self):
+        return len(self.get_all_feedback())
 
     # ------------------------------------------------------------------
     # Authorized Admin Emails Management
@@ -809,6 +950,36 @@ def login_required(f):
             return redirect(url_for('index', login='required'))
         return f(*args, **kwargs)
     return decorated
+
+
+# ===========================================================================
+# PWA & Favicon Delivery Endpoints
+# ===========================================================================
+@app.route('/favicon.ico')
+def favicon():
+    return send_file(config.BASE_DIR / 'static' / 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route('/favicon.svg')
+def favicon_svg():
+    return send_file(config.BASE_DIR / 'static' / 'favicon.svg', mimetype='image/svg+xml')
+
+@app.route('/apple-touch-icon.png')
+@app.route('/apple-touch-icon-precomposed.png')
+def apple_touch_icon():
+    return send_file(config.BASE_DIR / 'static' / 'apple-touch-icon.png', mimetype='image/png')
+
+@app.route('/icon-192.png')
+def icon_192():
+    return send_file(config.BASE_DIR / 'static' / 'icon-192.png', mimetype='image/png')
+
+@app.route('/icon-512.png')
+def icon_512():
+    return send_file(config.BASE_DIR / 'static' / 'icon-512.png', mimetype='image/png')
+
+@app.route('/manifest.json')
+@app.route('/site.webmanifest')
+def manifest():
+    return send_file(config.BASE_DIR / 'static' / 'manifest.json', mimetype='application/manifest+json')
 
 
 # ===========================================================================
@@ -1409,6 +1580,7 @@ def admin_stats():
         total_unique_users = db.count_users()
         current_resumes = db.count_active_resumes()
         total_resumes_generated = db.count_total_resumes_generated()
+        total_feedback = db.count_feedback()
         daily_stats = {s['_id']: s for s in stats}
 
         return jsonify({
@@ -1417,6 +1589,7 @@ def admin_stats():
             "total_unique_users": total_unique_users,
             "current_resumes": current_resumes,
             "total_resumes_generated": total_resumes_generated,
+            "total_feedback": total_feedback,
             "total_users": total_unique_users,
             "total_resumes": current_resumes,
             "total_generated": total_resumes_generated,

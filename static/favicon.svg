@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#312e81" />
+    </linearGradient>
+
+    <!-- Accent / R Gradient -->
+    <linearGradient id="rGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+
+    <!-- Sparkle Glow -->
+    <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="60%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <!-- Document Fill -->
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04" />
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- App Squircle Base -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bgGrad)" stroke="#4338ca" stroke-width="4" />
+
+  <!-- Document Silhouette Backdrop with Fold -->
+  <g transform="translate(100, 76)">
+    <!-- Document Body -->
+    <path d="M 24 0 L 224 0 L 288 64 L 288 336 C 288 349.25 277.25 360 264 360 L 24 360 C 10.75 360 0 349.25 0 336 L 0 24 C 0 10.75 10.75 0 24 0 Z"
+          fill="url(#docGrad)" stroke="rgba(255,255,255,0.22)" stroke-width="3" />
+    <!-- Fold Corner -->
+    <path d="M 224 0 L 224 64 L 288 64 Z" fill="rgba(255,255,255,0.28)" />
+    <!-- Subtle resume line accents -->
+    <line x1="40" y1="52" x2="160" y2="52" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" opacity="0.6" />
+    <line x1="40" y1="80" x2="190" y2="80" stroke="#818cf8" stroke-width="4" stroke-linecap="round" opacity="0.4" />
+    <line x1="40" y1="104" x2="140" y2="104" stroke="#818cf8" stroke-width="4" stroke-linecap="round" opacity="0.3" />
+  </g>
+
+  <!-- Central Stylized "R" Monogram -->
+  <!-- Stem -->
+  <rect x="156" y="196" width="44" height="196" rx="16" fill="url(#rGrad)" filter="url(#glow)" />
+  <rect x="156" y="196" width="44" height="196" rx="16" fill="#ffffff" />
+
+  <!-- Loop of R -->
+  <path d="M 180 196 L 276 196 C 322 196 352 222 352 264 C 352 306 322 332 276 332 L 180 332 Z"
+        fill="none" stroke="url(#rGrad)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Leg of R -->
+  <path d="M 252 316 L 338 392"
+        fill="none" stroke="url(#rGrad)" stroke-width="44" stroke-linecap="round" />
+
+  <!-- AI Starburst Sparkle (Top-Right) -->
+  <g transform="translate(366, 128)">
+    <!-- 4-point Diamond Starburst -->
+    <path d="M 0 -44 Q 0 0 -44 0 Q 0 0 0 44 Q 0 0 44 0 Q 0 0 0 -44 Z" fill="url(#sparkleGrad)" filter="url(#glow)" />
+    <circle cx="0" cy="0" r="10" fill="#ffffff" />
+  </g>
+
+  <!-- Secondary subtle AI sparkle -->
+  <g transform="translate(136, 150) scale(0.45)">
+    <path d="M 0 -36 Q 0 0 -36 0 Q 0 0 0 36 Q 0 0 36 0 Q 0 0 0 -36 Z" fill="#38bdf8" opacity="0.8" />
+  </g>
+</svg>

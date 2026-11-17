@@ -1,0 +1,229 @@
+<!-- Resumeora Official Footer & Developer Attribution -->
+<style>
+    .resumeora-footer {
+        background: #ffffff;
+        border-top: 1px solid #e2e8f0;
+        color: #475569;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+        padding: 2.25rem 1.5rem 1.5rem;
+        margin-top: auto;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .resumeora-footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.75rem;
+    }
+
+    /* Left: Product Brand */
+    .resumeora-brand-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 240px;
+    }
+
+    .resumeora-brand-header {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        text-decoration: none;
+    }
+
+    .resumeora-brand-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        object-fit: cover;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    }
+
+    .resumeora-brand-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.4px;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .resumeora-brand-tagline {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin: 0;
+        max-width: 320px;
+        line-height: 1.4;
+    }
+
+    /* Right: Developer Attribution & Company Logo */
+    .aivontraa-dev-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+
+    .aivontraa-dev-card:hover {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transform: translateY(-1px);
+    }
+
+    .aivontraa-logo-img {
+        height: 38px;
+        width: auto;
+        max-width: 120px;
+        object-fit: contain;
+        display: block;
+    }
+
+    .aivontraa-dev-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.3;
+    }
+
+    .aivontraa-dev-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 2px;
+    }
+
+    .aivontraa-company-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .aivontraa-link-icon {
+        font-size: 0.75rem;
+        color: #4f46e5;
+    }
+
+    /* Bottom: Copyright & Legal */
+    .resumeora-footer-bottom {
+        max-width: 1200px;
+        margin: 1.5rem auto 0;
+        padding-top: 1.25rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+
+    .resumeora-footer-bottom a {
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .resumeora-footer-bottom a:hover {
+        color: #0f172a;
+        text-decoration: underline;
+    }
+
+    /* Responsive Overrides (Tablets & Mobile) */
+    @media (max-width: 768px) {
+        .resumeora-footer {
+            padding: 1.75rem 1rem 1.25rem;
+        }
+
+        .resumeora-footer-inner {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.5rem;
+        }
+
+        .resumeora-brand-box {
+            align-items: center;
+        }
+
+        .resumeora-brand-tagline {
+            max-width: 100%;
+        }
+
+        .aivontraa-dev-card {
+            width: 100%;
+            max-width: 360px;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+        }
+
+        .aivontraa-logo-img {
+            height: 32px;
+        }
+
+        .aivontraa-dev-info {
+            text-align: left;
+        }
+
+        .resumeora-footer-bottom {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+    }
+</style>
+
+<footer class="resumeora-footer">
+    <div class="resumeora-footer-inner">
+        <!-- Resumeora Independent Brand Identity -->
+        <div class="resumeora-brand-box">
+            <a href="/" class="resumeora-brand-header">
+                <img src="/static/favicon.svg" alt="Resumeora App Icon" class="resumeora-brand-icon">
+                <span class="resumeora-brand-title">Resumeora</span>
+            </a>
+            <p class="resumeora-brand-tagline">
+                AI-powered resume builder for modern professionals. Craft ATS-optimized resumes in minutes.
+            </p>
+        </div>
+
+        <!-- Official Company Developer Attribution -->
+        <a href="https://aivontraa.com" target="_blank" rel="noopener" class="aivontraa-dev-card" title="Visit Aivontraa Automation Official Website">
+            <img src="/static/images/aivontraa-logo-web.png"
+                 alt="Aivontraa Automation Private Limited Logo"
+                 class="aivontraa-logo-img"
+                 onerror="this.src='https://aivontraa.com/assets/images/ai.png'">
+            <div class="aivontraa-dev-info">
+                <span class="aivontraa-dev-label">Developed by</span>
+                <span class="aivontraa-company-name">
+                    Aivontraa Automation Private Limited
+                    <i class="bi bi-box-arrow-up-right aivontraa-link-icon"></i>
+                </span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Copyright & Links -->
+    <div class="resumeora-footer-bottom">
+        <div>
+            &copy; 2026 Resumeora · All rights reserved.
+        </div>
+        <div>
+            Developed with excellence by <a href="https://aivontraa.com" target="_blank" rel="noopener">Aivontraa Automation Private Limited</a>
+        </div>
+    </div>
+</footer>
