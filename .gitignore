@@ -1,6 +1,5 @@
 # Environment variables
 .env
-resume_builder/.env
 
 # Python
 __pycache__/
@@ -11,9 +10,11 @@ venv/
 env/
 .env/
 
-# Data
-data/
+# Data & Temp
+data/temp_pdfs/
 *.log
 
 # OS
 .DS_Store
+Thumbs.db
+backup_pre_update/

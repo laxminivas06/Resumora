@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Admin Dashboard – Resumora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .admin-header h4 { margin: 0; font-weight: 800; letter-spacing: -.5px; }
+
+        /* Stat cards */
+        .stat-card {
+            border-radius: 12px;
+            padding: 16px 18px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,.08);
+            transition: transform .2s ease;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card .stat-label { font-size: .75rem; opacity: .85; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+        .stat-card .stat-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin-top: 4px; }
+        .stat-card .stat-icon {
+            position: absolute; right: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 2.2rem; opacity: .18;
+        }
+
+        .bg-grad-blue   { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+        .bg-grad-green  { background: linear-gradient(135deg, #059669, #10b981); }
+        .bg-grad-orange { background: linear-gradient(135deg, #d97706, #f59e0b); }
+        .bg-grad-red    { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .bg-grad-teal   { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+        .bg-grad-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+
+        /* Storage bar */
+        .storage-bar { height: 8px; border-radius: 4px; }
+
+        /* Tables & Cards */
+        .table-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; background: #f8fafc; }
+        .table td { vertical-align: middle; }
+        .table-hover tbody tr:hover { background: #f8faff; }
+
+        .badge-resume {
+            background: #ede9fe; color: #5b21b6;
+            font-size: .75rem; padding: 3px 8px;
+            border-radius: 999px; font-weight: 600;
+        }
+
+        /* Tabs styling with horizontal touch-scroll */
+        .nav-tabs {
+            border-bottom: 2px solid #e2e8f0;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 1px;
+        }
+        .nav-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .nav-tabs::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .nav-tabs .nav-link {
+            font-size: .88rem;
+            color: #64748b;
+            border: none;
+            padding: 10px 16px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .nav-tabs .nav-link.active {
+            color: #0f172a;
+            font-weight: 700;
+            border-bottom: 3px solid #0f172a;
+            background: none;
+        }
+
+        /* Flash */
+        .flash-container { position: fixed; top: 70px; right: 16px; z-index: 2000; min-width: 280px; max-width: 90vw; }
+
+        .dev-badge {
+            font-size: .65rem; background: #fef3c7; color: #92400e;
+            border-radius: 999px; padding: 2px 8px; font-weight: 700;
+        }
+
+        /* Responsive overrides */
+        @media (max-width: 768px) {
+            .stat-value { font-size: 1.4rem; }
+            .admin-header h4 { font-size: 1rem; }
+            .admin-header { padding: 10px 14px; }
+            .nav-tabs .nav-link { font-size: .8rem; padding: 8px 12px; }
+            .table-responsive { font-size: .82rem; }
+            .btn-sm { font-size: .78rem; }
+        }
+        @media (max-width: 576px) {
+            .stat-card { padding: 12px 14px; }
+            .stat-value { font-size: 1.25rem; }
+            .col-6 { flex: 0 0 50%; max-width: 50%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="admin-header d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+        <h4><i class="bi bi-shield-check me-1"></i>Resumora Admin</h4>
+        {% if app_env == 'development' %}
+            <span class="dev-badge">DEV</span>
+        {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="d-none d-md-inline small text-light opacity-75">
+            <i class="bi bi-person-circle me-1"></i>{{ current_admin }}
+        </span>
+        <select class="form-select form-select-sm" style="width:auto;"
+                onchange="location.href='?per_page='+this.value">
+            <option value="25" {{ 'selected' if per_page == 25 }}>25 / page</option>
+            <option value="50" {{ 'selected' if per_page == 50 }}>50 / page</option>
+            <option value="100" {{ 'selected' if per_page == 100 }}>100 / page</option>
+        </select>
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light">
+            <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Logout</span>
+        </a>
+    </div>
+</header>
+
+<!-- Flash messages -->
+<div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class="container-fluid px-3 px-md-4 mt-3">
+
+    <!-- Stat cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card bg-grad-red">
+                <div class="stat-label">Unique Users</div>
+                <div class="stat-value" id="stat-users">{{ total_unique_users or u_total }}</div>
+                <i class="bi bi-people stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card bg-grad-green">
+                <div class="stat-label">Current Resumes</div>
+                <div class="stat-value" id="stat-resumes">{{ current_resumes_count }}</div>
+                <i class="bi bi-file-earmark-person-fill stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card bg-grad-purple">
+                <div class="stat-label">Total Generated</div>
+                <div class="stat-value" id="stat-total-gen">{{ total_resumes_generated }}</div>
+                <i class="bi bi-clock-history stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card bg-grad-blue">
+                <div class="stat-label">Visits</div>
+                <div class="stat-value" id="stat-visits">–</div>
+                <i class="bi bi-eye stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card bg-grad-orange">
+                <div class="stat-label">Form Starts</div>
+                <div class="stat-value" id="stat-starts">–</div>
+                <i class="bi bi-pencil-square stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card bg-grad-teal">
+                <div class="stat-label">Feedback</div>
+                <div class="stat-value">{{ feedbacks|length }}</div>
+                <i class="bi bi-star stat-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage monitor -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-database fs-5 text-primary"></i>
+                    <strong class="small">Storage Monitor</strong>
+                    <span id="storage-status-badge" class="badge bg-secondary ms-1">–</span>
+                </div>
+                <div class="flex-grow-1" style="max-width:320px;">
+                    <div class="progress storage-bar">
+                        <div id="storage-bar" class="progress-bar" role="progressbar" style="width:0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small id="storage-used" class="text-muted">–</small>
+                        <small class="text-muted">/ 300 MB</small>
+                    </div>
+                </div>
+                <div id="storage-files" class="d-flex flex-wrap gap-2 small text-muted"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-resumes" data-bs-toggle="tab"
+                    data-bs-target="#pane-resumes" type="button">
+                <i class="bi bi-file-earmark-person me-1"></i>
+                Resumes
+                <span class="badge bg-primary ms-1" id="badge-resumes-count">{{ current_resumes_count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-users" data-bs-toggle="tab"
+                    data-bs-target="#pane-users" type="button">
+                <i class="bi bi-people me-1"></i>
+                Users
+                <span class="badge bg-danger ms-1" id="badge-users-count">{{ total_unique_users or u_total }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-admins" data-bs-toggle="tab"
+                    data-bs-target="#pane-admins" type="button">
+                <i class="bi bi-shield-lock me-1"></i>
+                Authorized Emails
+                <span class="badge bg-dark ms-1" id="badge-admin-count">{{ admins_data.authorized_emails|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-logs" data-bs-toggle="tab"
+                    data-bs-target="#pane-logs" type="button">
+                <i class="bi bi-clock-history me-1"></i>
+                Logs
+                <span class="badge bg-secondary ms-1">{{ l_total }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-feedback" data-bs-toggle="tab"
+                    data-bs-target="#pane-feedback" type="button">
+                <i class="bi bi-star me-1"></i>
+                Feedback
+                <span class="badge bg-warning text-dark ms-1">{{ feedbacks|length }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- ==================================================
+             PANE: RESUMES
+             ================================================== -->
+        <div class="tab-pane fade show active" id="pane-resumes" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="?view_mode=active" class="btn {{ 'btn-dark' if view_mode != 'history' else 'btn-outline-dark' }}">
+                            <i class="bi bi-check2-circle me-1"></i>Current Resumes ({{ current_resumes_count }})
+                        </a>
+                        <a href="?view_mode=history" class="btn {{ 'btn-dark' if view_mode == 'history' else 'btn-outline-dark' }}">
+                            <i class="bi bi-clock-history me-1"></i>All Records ({{ total_resumes_generated }})
+                        </a>
+                    </div>
+                    <small class="text-muted ms-2">
+                        {% if view_mode == 'history' %}
+                            Showing page {{ res_page }} · Historical archive of all resume generations
+                        {% else %}
+                            Showing page {{ res_page }} · Exactly 1 active resume per account (no duplicates)
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('export_csv', mode=view_mode) }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download me-1"></i>Export {{ 'All' if view_mode == 'history' else 'Unique' }} Resumes CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Account</th>
+                                <th>Resume Person</th>
+                                <th>Status / Versions</th>
+                                <th>Contact</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in resumes %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted d-block">{{ r.timestamp }}</small>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <strong class="text-dark">{{ r.user_name or 'Guest' }}</strong><br>
+                                        <span class="text-muted">{{ r.user_email or 'N/A' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <span class="fw-bold text-dark">{{ r.personal_details.name if r.personal_details and r.personal_details.name else '—' }}</span>
+                                        {% if r.professional_details and r.professional_details.title %}
+                                            <div class="text-muted" style="font-size:0.75rem;">{{ r.professional_details.title }}</div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if r.version_count and r.version_count > 1 %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">
+                                            <i class="bi bi-collection me-1"></i>{{ r.version_count }} Versions
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-secondary border me-1">1 Version</span>
+                                    {% endif %}
+
+                                    {% if r.is_latest or view_mode != 'history' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-check-circle me-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border">
+                                            Historical
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small text-muted">
+                                        {% if r.personal_details %}
+                                            <div><i class="bi bi-envelope me-1"></i>{{ r.personal_details.email or '—' }}</div>
+                                            {% if r.personal_details.phone %}
+                                                <div><i class="bi bi-telephone me-1"></i>{{ r.personal_details.phone }}</div>
+                                            {% endif %}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <button class="btn btn-sm btn-primary py-1 px-2"
+                                                onclick="openResumeModal('{{ r._id }}')"
+                                                title="View complete resume details">
+                                            <i class="bi bi-eye me-1"></i>View
+                                        </button>
+                                        {% set acct_key = r.account_key or r.user_email %}
+                                        {% if acct_key %}
+                                            <button class="btn btn-sm btn-outline-secondary py-1 px-2"
+                                                    onclick="openHistoryModal('{{ acct_key }}')"
+                                                    title="View all versions for this account">
+                                                <i class="bi bi-clock-history"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not resumes %}
+                            <tr><td colspan="6" class="text-center text-muted py-5">No resumes found</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Resumes Pagination Controls -->
+                {% set total_res_pages = ((res_total - 1) // per_page) + 1 %}
+                {% if total_res_pages > 1 %}
+                <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <small class="text-muted">Showing page {{ res_page }} of {{ total_res_pages }} ({{ res_total }} records)</small>
+                    <div class="btn-group btn-group-sm">
+                        {% if res_page > 1 %}
+                            <a href="?view_mode={{ view_mode }}&res_page={{ res_page - 1 }}&per_page={{ per_page }}" class="btn btn-outline-dark">&laquo; Previous</a>
+                        {% endif %}
+                        <span class="btn btn-light disabled">Page {{ res_page }} / {{ total_res_pages }}</span>
+                        {% if res_page < total_res_pages %}
+                            <a href="?view_mode={{ view_mode }}&res_page={{ res_page + 1 }}&per_page={{ per_page }}" class="btn btn-outline-dark">Next &raquo;</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==================================================
+             PANE: USERS
+             ================================================== -->
+        <div class="tab-pane fade" id="pane-users" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <small class="text-muted">Showing page {{ u_page }} of {{ ((u_total - 1) // per_page) + 1 }} ({{ u_total }} unique registered accounts)</small>
+                <a href="{{ url_for('export_users_csv') }}" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-download me-1"></i>Export Users CSV
+                </a>
+            </div>
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>User Account</th>
+                                <th>Resumes Generated</th>
+                                <th>Latest Resume Date</th>
+                                <th>Last Active</th>
+                                <th>Joined</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>
+                                    <div class="small">
+                                        <strong class="text-dark">{{ u.name or 'Unknown' }}</strong><br>
+                                        <span class="text-muted">{{ u.email }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if u.resume_count > 1 %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            <i class="bi bi-collection me-1"></i>{{ u.resume_count }} generated
+                                        </span>
+                                    {% elif u.resume_count == 1 %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            1 generated
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">0 generated</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ u.latest_resume_date or '—' }}</small></td>
+                                <td><small class="text-muted">{{ u.last_seen or '—' }}</small></td>
+                                <td><small class="text-muted">{{ u.created_at or '—' }}</small></td>
+                                <td class="text-end">
+                                    {% if u.resume_count > 0 %}
+                                    <div class="d-inline-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary py-1 px-2"
+                                                onclick="openUserLatestResume('{{ u.email }}')"
+                                                title="View latest active resume">
+                                            <i class="bi bi-file-earmark-person me-1"></i>View Resume
+                                        </button>
+                                        {% if u.resume_count > 1 %}
+                                        <button class="btn btn-sm btn-outline-secondary py-1 px-2"
+                                                onclick="openHistoryModal('{{ u.email }}')"
+                                                title="View all versions">
+                                            <i class="bi bi-clock-history"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                        <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not users %}
+                            <tr><td colspan="6" class="text-center text-muted py-5">No registered users yet</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Users Pagination Controls -->
+                {% set total_u_pages = ((u_total - 1) // per_page) + 1 %}
+                {% if total_u_pages > 1 %}
+                <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <small class="text-muted">Showing page {{ u_page }} of {{ total_u_pages }} ({{ u_total }} users)</small>
+                    <div class="btn-group btn-group-sm">
+                        {% if u_page > 1 %}
+                            <a href="?u_page={{ u_page - 1 }}&per_page={{ per_page }}" class="btn btn-outline-dark">&laquo; Previous</a>
+                        {% endif %}
+                        <span class="btn btn-light disabled">Page {{ u_page }} / {{ total_u_pages }}</span>
+                        {% if u_page < total_u_pages %}
+                            <a href="?u_page={{ u_page + 1 }}&per_page={{ per_page }}" class="btn btn-outline-dark">Next &raquo;</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==================================================
+             PANE: AUTHORIZED EMAILS MANAGEMENT
+             ================================================== -->
+        <div class="tab-pane fade" id="pane-admins" role="tabpanel">
+            <div class="row g-3">
+                <!-- Left Column: Add admin & Update limit -->
+                <div class="col-12 col-lg-5">
+                    <!-- Add Admin Card -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                <i class="bi bi-person-plus-fill text-primary"></i> Add Authorized Admin
+                            </h6>
+                            <p class="text-muted small mb-3">
+                                Only authorized email addresses are permitted to log in to this administrative dashboard.
+                            </p>
+                            <div id="add-admin-alert" style="display:none;" class="alert py-2 px-3 small mb-2"></div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" id="new-admin-email" class="form-control" placeholder="name@domain.com">
+                                <button class="btn btn-dark" type="button" onclick="handleAddAdmin()">
+                                    <i class="bi bi-plus-lg me-1"></i>Add
+                                </button>
+                            </div>
+                            <small class="text-muted">
+                                Changes are saved immediately and persist across restarts.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Max Limit Card -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                <i class="bi bi-sliders text-primary"></i> Permitted Admins Limit
+                            </h6>
+                            <p class="text-muted small mb-3">
+                                Controls how many administrator accounts can be authorized concurrently.
+                            </p>
+                            <div id="limit-admin-alert" style="display:none;" class="alert py-2 px-3 small mb-2"></div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                <input type="number" id="admin-limit-input" class="form-control"
+                                       value="{{ admins_data.max_allowed }}" min="1" max="100">
+                                <button class="btn btn-outline-dark" type="button" onclick="handleUpdateLimit()">
+                                    Save Limit
+                                </button>
+                            </div>
+                            <small class="text-muted">
+                                Current usage: <strong id="admin-usage-text">{{ admins_data.authorized_emails|length }} / {{ admins_data.max_allowed }}</strong>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Current Authorized Admins Table -->
+                <div class="col-12 col-lg-7">
+                    <div class="table-container">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-0">Authorized Administrator Emails</h6>
+                                <small class="text-muted">Single source of truth: <code>data/admins.json</code></small>
+                            </div>
+                            <span class="badge bg-dark" id="badge-admin-count-pill">
+                                {{ admins_data.authorized_emails|length }} active
+                            </span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="admins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Administrator Email</th>
+                                        <th>Role / Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admins-table-body">
+                                    {% for email in admins_data.authorized_emails %}
+                                    <tr id="admin-row-{{ loop.index }}">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-shield-check text-primary"></i>
+                                                <span class="fw-semibold text-dark">{{ email }}</span>
+                                                {% if email == current_admin %}
+                                                    <span class="badge bg-secondary small" style="font-size:0.65rem;">You</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Authorized</span>
+                                        </td>
+                                        <td class="text-end">
+                                            {% if admins_data.authorized_emails|length > 1 %}
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    onclick="handleRemoveAdmin('{{ email }}')"
+                                                    title="Remove authorization">
+                                                <i class="bi bi-trash"></i> <span class="d-none d-sm-inline">Remove</span>
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-sm btn-outline-secondary" disabled title="At least one administrator must remain">
+                                                <i class="bi bi-lock-fill"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 bg-light border-top">
+                            <small class="text-muted d-block">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Safety Rule:</strong> At least one administrator account must always remain. The system prevents removing the last administrator account to ensure you are never locked out.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================
+             PANE: LOGS
+             ================================================== -->
+        <div class="tab-pane fade" id="pane-logs" role="tabpanel">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>User</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for l in logs %}
+                            <tr>
+                                <td><small class="text-muted">{{ l.timestamp }}</small></td>
+                                <td><span class="badge bg-light text-dark border">{{ l.event }}</span></td>
+                                <td><small>{{ l.email }}</small></td>
+                                <td><small class="text-muted">{{ l.data if l.data else '—' }}</small></td>
+                            </tr>
+                            {% endfor %}
+                            {% if not logs %}
+                            <tr><td colspan="4" class="text-center text-muted py-5">No logs recorded</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================
+             PANE: FEEDBACK
+             ================================================== -->
+        <div class="tab-pane fade" id="pane-feedback" role="tabpanel">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in feedbacks %}
+                            <tr>
+                                <td><small class="text-muted">{{ f.timestamp }}</small></td>
+                                <td>
+                                    <div class="small">
+                                        {% if f.name %}<strong>{{ f.name }}</strong><br>{% endif %}
+                                        <span class="text-muted">{{ f.email }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-warning small">
+                                        {% for i in range(f.rating|int) %}<i class="bi bi-star-fill"></i>{% endfor %}
+                                        {% for i in range(5 - f.rating|int) %}<i class="bi bi-star"></i>{% endfor %}
+                                    </div>
+                                    <small class="text-muted">{{ f.rating }}/5</small>
+                                </td>
+                                <td>
+                                    <small>{{ f.comment if f.comment else '—' }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not feedbacks %}
+                            <tr><td colspan="4" class="text-center text-muted py-5">No feedback found</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /tab-content -->
+</div><!-- /container-fluid -->
+
+<!-- ==================================================
+     MODAL: COMPLETE RESUME VIEWER
+     ================================================== -->
+<div class="modal fade" id="resumeViewModal" tabindex="-1" aria-labelledby="resumeViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" id="resumeViewModalLabel">
+                        <i class="bi bi-file-earmark-person-fill text-primary me-2"></i>
+                        <span id="rv-person-name">Resume Details</span>
+                    </h5>
+                    <small class="text-white-50" id="rv-account-info"></small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span id="rv-status-badge" class="badge bg-success">Active / Latest</span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <!-- Version Switcher Bar (displayed when account has multiple versions) -->
+            <div id="rv-version-bar" class="bg-light px-4 py-2 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2" style="display:none;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-secondary"></i>
+                    <strong class="small">Switch Version:</strong>
+                    <select id="rv-version-select" class="form-select form-select-sm" style="width:auto;" onchange="handleVersionSelectChange(this.value)">
+                    </select>
+                </div>
+                <small class="text-muted" id="rv-version-count-text"></small>
+            </div>
+
+            <div class="modal-body p-4 bg-light">
+                <div id="rv-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted small mt-2">Loading resume details...</p>
+                </div>
+
+                <div id="rv-content" style="display:none;">
+                    <!-- Resume Personal Details Card -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                                <div>
+                                    <h4 class="fw-bold mb-1 text-dark" id="rv-full-name"></h4>
+                                    <div class="text-muted fw-semibold mb-2" id="rv-target-role"></div>
+                                    <div class="d-flex flex-wrap gap-3 small text-muted">
+                                        <span id="rv-contact-email"><i class="bi bi-envelope me-1"></i><span class="val"></span></span>
+                                        <span id="rv-contact-phone"><i class="bi bi-telephone me-1"></i><span class="val"></span></span>
+                                        <span id="rv-contact-location"><i class="bi bi-geo-alt me-1"></i><span class="val"></span></span>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2" id="rv-social-links">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Summary Card -->
+                    <div class="card border-0 shadow-sm mb-3" id="rv-card-summary">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-text-paragraph text-primary"></i> Professional Summary
+                            </h6>
+                            <div class="mb-0 text-secondary" id="rv-summary-text" style="line-height:1.6;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Skills Card -->
+                    <div class="card border-0 shadow-sm mb-3" id="rv-card-skills">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+                                <i class="bi bi-tools text-primary"></i> Skills & Proficiencies
+                            </h6>
+                            <div class="mb-3" id="rv-skills-tech-box">
+                                <strong class="small text-dark d-block mb-2">Technical Skills:</strong>
+                                <div id="rv-skills-tech" class="d-flex flex-wrap gap-1"></div>
+                            </div>
+                            <div id="rv-skills-nontech-box">
+                                <strong class="small text-dark d-block mb-2">Soft & Professional Skills:</strong>
+                                <div id="rv-skills-nontech" class="d-flex flex-wrap gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Work Experience Card -->
+                    <div class="card border-0 shadow-sm mb-3" id="rv-card-experience">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+                                <i class="bi bi-briefcase text-primary"></i> Work Experience
+                            </h6>
+                            <div id="rv-experience-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Education Card -->
+                    <div class="card border-0 shadow-sm mb-3" id="rv-card-education">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+                                <i class="bi bi-mortarboard text-primary"></i> Education
+                            </h6>
+                            <div id="rv-education-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Projects Card -->
+                    <div class="card border-0 shadow-sm mb-3" id="rv-card-projects">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+                                <i class="bi bi-kanban text-primary"></i> Projects
+                            </h6>
+                            <div id="rv-projects-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Certifications & Additional Info Card -->
+                    <div class="card border-0 shadow-sm mb-3" id="rv-card-certifications">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-award text-primary"></i> Certifications & Additional Details
+                            </h6>
+                            <div id="rv-certifications-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-white d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="rv-btn-open-history" style="display:none;" onclick="openHistoryFromViewer()">
+                        <i class="bi bi-clock-history me-1"></i>View Full History
+                    </button>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================
+     MODAL: RESUME VERSION HISTORY LIST
+     ================================================== -->
+<div class="modal fade" id="versionHistoryModal" tabindex="-1" aria-labelledby="versionHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" id="versionHistoryModalLabel">
+                        <i class="bi bi-clock-history text-primary me-2"></i>Resume Version History
+                    </h5>
+                    <small class="text-white-50" id="vh-account-email"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="vh-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted small mt-2">Loading version records...</p>
+                </div>
+                <div class="table-responsive" id="vh-table-container" style="display:none;">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Version</th>
+                                <th>Timestamp</th>
+                                <th>Resume Name</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vh-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-5 py-3 border-top text-center">
+    <small class="text-muted">
+        &copy; 2026 Resumora Admin · AIVONTRAA AUTOMATION PVT. LTD.
+        {% if app_env == 'development' %}
+        · <span class="text-warning fw-bold">LOCAL DEV ENVIRONMENT</span>
+        {% endif %}
+    </small>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const currentAdminEmail = "{{ current_admin }}";
+
+// Tab persistence
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('adminActiveTab');
+    if (saved) {
+        const el = document.getElementById(saved);
+        if (el) bootstrap.Tab.getOrCreateInstance(el).show();
+    }
+    document.querySelectorAll('.nav-link[data-bs-toggle="tab"]').forEach(link => {
+        link.addEventListener('shown.bs.tab', e => localStorage.setItem('adminActiveTab', e.target.id));
+    });
+
+    setTimeout(() => {
+        document.querySelectorAll('.flash-container .alert').forEach(a => {
+            bootstrap.Alert.getOrCreateInstance(a)?.close();
+        });
+    }, 6000);
+});
+
+// Authorized Admin Emails AJAX Handling
+function renderAdminTable(data) {
+    const emails = data.authorized_emails || [];
+    const maxAllowed = data.max_allowed || 10;
+    
+    // Update count badges
+    document.getElementById('badge-admin-count').textContent = emails.length;
+    document.getElementById('badge-admin-count-pill').textContent = emails.length + ' active';
+    document.getElementById('admin-usage-text').textContent = emails.length + ' / ' + maxAllowed;
+    document.getElementById('admin-limit-input').value = maxAllowed;
+
+    const tbody = document.getElementById('admins-table-body');
+    tbody.innerHTML = emails.map((email, idx) => {
+        const isCurrent = (email.toLowerCase() === currentAdminEmail.toLowerCase());
+        const canDelete = emails.length > 1;
+        return `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-primary"></i>
+                        <span class="fw-semibold text-dark">${email}</span>
+                        ${isCurrent ? '<span class="badge bg-secondary small" style="font-size:0.65rem;">You</span>' : ''}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">Authorized</span>
+                </td>
+                <td class="text-end">
+                    ${canDelete ? `
+                        <button class="btn btn-sm btn-outline-danger" onclick="handleRemoveAdmin('${email}')" title="Remove authorization">
+                            <i class="bi bi-trash"></i> <span class="d-none d-sm-inline">Remove</span>
+                        </button>
+                    ` : `
+                        <button class="btn btn-sm btn-outline-secondary" disabled title="At least one administrator must remain">
+                            <i class="bi bi-lock-fill"></i>
+                        </button>
+                    `}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function handleAddAdmin() {
+    const input = document.getElementById('new-admin-email');
+    const alertBox = document.getElementById('add-admin-alert');
+    const email = input.value.trim();
+
+    if (!email) {
+        alertBox.className = 'alert alert-danger py-2 px-3 small mb-2';
+        alertBox.textContent = 'Please enter a valid email address.';
+        alertBox.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch('/admin/authorized-emails/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const result = await res.json();
+
+        if (res.ok && result.status === 'success') {
+            alertBox.className = 'alert alert-success py-2 px-3 small mb-2';
+            alertBox.textContent = result.message;
+            alertBox.style.display = 'block';
+            input.value = '';
+            renderAdminTable(result.data);
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        } else {
+            alertBox.className = 'alert alert-danger py-2 px-3 small mb-2';
+            alertBox.textContent = result.message || 'Failed to add administrator.';
+            alertBox.style.display = 'block';
+        }
+    } catch (e) {
+        alertBox.className = 'alert alert-danger py-2 px-3 small mb-2';
+        alertBox.textContent = 'Connection error. Please try again.';
+        alertBox.style.display = 'block';
+    }
+}
+
+async function handleRemoveAdmin(email) {
+    if (!confirm(`Are you sure you want to revoke administrator access for: ${email}?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/admin/authorized-emails/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const result = await res.json();
+
+        if (res.ok && result.status === 'success') {
+            renderAdminTable(result.data);
+        } else {
+            alert(result.message || 'Failed to remove administrator.');
+        }
+    } catch (e) {
+        alert('Connection error. Please try again.');
+    }
+}
+
+async function handleUpdateLimit() {
+    const input = document.getElementById('admin-limit-input');
+    const alertBox = document.getElementById('limit-admin-alert');
+    const limit = parseInt(input.value);
+
+    if (isNaN(limit) || limit < 1) {
+        alertBox.className = 'alert alert-danger py-2 px-3 small mb-2';
+        alertBox.textContent = 'Please enter a valid number greater than 0.';
+        alertBox.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch('/admin/authorized-emails/limit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ limit })
+        });
+        const result = await res.json();
+
+        if (res.ok && result.status === 'success') {
+            alertBox.className = 'alert alert-success py-2 px-3 small mb-2';
+            alertBox.textContent = result.message;
+            alertBox.style.display = 'block';
+            renderAdminTable(result.data);
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        } else {
+            alertBox.className = 'alert alert-danger py-2 px-3 small mb-2';
+            alertBox.textContent = result.message || 'Failed to update limit.';
+            alertBox.style.display = 'block';
+        }
+    } catch (e) {
+        alertBox.className = 'alert alert-danger py-2 px-3 small mb-2';
+        alertBox.textContent = 'Connection error. Please try again.';
+        alertBox.style.display = 'block';
+    }
+}
+
+// Resume Viewer and History Modal State
+let currentViewerAccountKey = '';
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function stripHtmlTags(str) {
+    if (!str) return '';
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = str;
+    return tmp.textContent || tmp.innerText || '';
+}
+
+async function openResumeModal(resumeId) {
+    const modalEl = document.getElementById('resumeViewModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    document.getElementById('rv-loading').style.display = 'block';
+    document.getElementById('rv-content').style.display = 'none';
+
+    try {
+        const res = await fetch(`/admin/resume/${encodeURIComponent(resumeId)}`);
+        const data = await res.json();
+
+        if (!res.ok || data.status !== 'success') {
+            document.getElementById('rv-loading').innerHTML = `
+                <div class="alert alert-danger mb-0">Failed to load resume details: ${escapeHtml(data.message || 'Unknown error')}</div>
+            `;
+            return;
+        }
+
+        const r = data.resume || {};
+        const p = r.personal_details || {};
+        const prof = r.professional_details || {};
+        currentViewerAccountKey = data.account_key || r.user_email || '';
+
+        // Header info
+        document.getElementById('rv-person-name').textContent = p.name || 'Unnamed Resume';
+        document.getElementById('rv-account-info').textContent = `Account: ${r.user_name || 'Guest'} (${r.user_email || 'N/A'}) · Timestamp: ${r.timestamp || '—'}`;
+        
+        // Status Badge
+        const statusBadge = document.getElementById('rv-status-badge');
+        const isLatest = (data.versions && data.versions[0] && String(data.versions[0]._id) === String(r._id));
+        if (isLatest) {
+            statusBadge.className = 'badge bg-success';
+            statusBadge.textContent = 'Active / Latest Version';
+        } else {
+            statusBadge.className = 'badge bg-secondary';
+            statusBadge.textContent = 'Historical Version';
+        }
+
+        // Version Selector Bar
+        const versionBar = document.getElementById('rv-version-bar');
+        const versionSelect = document.getElementById('rv-version-select');
+        const versionCountText = document.getElementById('rv-version-count-text');
+        const historyBtn = document.getElementById('rv-btn-open-history');
+
+        if (data.versions && data.versions.length > 1) {
+            versionBar.style.display = 'flex';
+            historyBtn.style.display = 'inline-block';
+            versionCountText.textContent = `Total ${data.versions.length} versions generated for this account`;
+            versionSelect.innerHTML = data.versions.map((v, idx) => `
+                <option value="${v._id}" ${String(v._id) === String(r._id) ? 'selected' : ''}>
+                    ${idx === 0 ? '★ Latest: ' : `Version ${data.versions.length - idx}: `} ${escapeHtml(v.timestamp || '')}
+                </option>
+            `).join('');
+        } else {
+            versionBar.style.display = 'none';
+            historyBtn.style.display = 'none';
+        }
+
+        // Populate Personal details
+        document.getElementById('rv-full-name').textContent = p.name || 'Unnamed';
+        document.getElementById('rv-target-role').textContent = prof.title || '';
+        document.querySelector('#rv-contact-email .val').textContent = p.email || '—';
+        document.querySelector('#rv-contact-phone .val').textContent = p.phone || '—';
+        document.querySelector('#rv-contact-location .val').textContent = p.location || '—';
+
+        // Social Links
+        const socialEl = document.getElementById('rv-social-links');
+        const socialItems = [];
+        if (p.linkedin) socialItems.push(`<a href="${escapeHtml(p.linkedin)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="bi bi-linkedin me-1"></i>LinkedIn</a>`);
+        if (p.github) socialItems.push(`<a href="${escapeHtml(p.github)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-dark"><i class="bi bi-github me-1"></i>GitHub</a>`);
+        if (p.portfolio) socialItems.push(`<a href="${escapeHtml(p.portfolio)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-info"><i class="bi bi-globe me-1"></i>Portfolio</a>`);
+        socialEl.innerHTML = socialItems.join('');
+
+        // Summary
+        const summaryText = stripHtmlTags(prof.summary || '');
+        if (summaryText.trim()) {
+            document.getElementById('rv-summary-text').textContent = summaryText;
+            document.getElementById('rv-card-summary').style.display = 'block';
+        } else {
+            document.getElementById('rv-card-summary').style.display = 'none';
+        }
+
+        // Skills
+        const techSkills = stripHtmlTags(String(prof.technical_skills || '')).split(',').map(s => s.trim()).filter(Boolean);
+        const nonTechSkills = stripHtmlTags(String(prof.non_technical_skills || '')).split(',').map(s => s.trim()).filter(Boolean);
+
+        const techContainer = document.getElementById('rv-skills-tech');
+        const nonTechContainer = document.getElementById('rv-skills-nontech');
+
+        if (techSkills.length > 0) {
+            document.getElementById('rv-skills-tech-box').style.display = 'block';
+            techContainer.innerHTML = techSkills.map(s => `<span class="badge bg-primary-subtle text-primary border border-primary-subtle">${escapeHtml(s)}</span>`).join(' ');
+        } else {
+            document.getElementById('rv-skills-tech-box').style.display = 'none';
+        }
+
+        if (nonTechSkills.length > 0) {
+            document.getElementById('rv-skills-nontech-box').style.display = 'block';
+            nonTechContainer.innerHTML = nonTechSkills.map(s => `<span class="badge bg-secondary-subtle text-secondary border">${escapeHtml(s)}</span>`).join(' ');
+        } else {
+            document.getElementById('rv-skills-nontech-box').style.display = 'none';
+        }
+
+        if (techSkills.length === 0 && nonTechSkills.length === 0) {
+            document.getElementById('rv-card-skills').style.display = 'none';
+        } else {
+            document.getElementById('rv-card-skills').style.display = 'block';
+        }
+
+        // Work Experience
+        const expList = document.getElementById('rv-experience-list');
+        const experiences = prof.work_experience || [];
+        if (experiences.length > 0) {
+            document.getElementById('rv-card-experience').style.display = 'block';
+            expList.innerHTML = experiences.map(exp => `
+                <div class="mb-3 pb-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div>
+                            <strong class="text-dark">${escapeHtml(exp.title || exp.role || 'Role')}</strong>
+                            <span class="text-muted"> at </span>
+                            <span class="fw-semibold text-primary">${escapeHtml(exp.company || 'Company')}</span>
+                            ${exp.location ? `<span class="text-muted small"> (${escapeHtml(exp.location)})</span>` : ''}
+                        </div>
+                        <small class="text-muted fw-semibold">${escapeHtml(exp.duration || exp.dates || '')}</small>
+                    </div>
+                    <p class="small text-secondary mb-0 mt-1" style="white-space:pre-line;">${escapeHtml(stripHtmlTags(exp.description || ''))}</p>
+                </div>
+            `).join('');
+        } else {
+            document.getElementById('rv-card-experience').style.display = 'none';
+        }
+
+        // Education
+        const eduList = document.getElementById('rv-education-list');
+        const education = prof.education || [];
+        if (education.length > 0) {
+            document.getElementById('rv-card-education').style.display = 'block';
+            eduList.innerHTML = education.map(edu => `
+                <div class="mb-3 pb-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div>
+                            <strong class="text-dark">${escapeHtml(edu.degree || 'Degree')}</strong>
+                            <div class="text-muted small">${escapeHtml(edu.institution || edu.school || 'Institution')}</div>
+                        </div>
+                        <div class="text-end small">
+                            <span class="text-muted fw-semibold">${escapeHtml(edu.year || edu.duration || '')}</span>
+                            ${edu.gpa ? `<div class="badge bg-light text-dark border">Score: ${escapeHtml(edu.gpa)}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            document.getElementById('rv-card-education').style.display = 'none';
+        }
+
+        // Projects
+        const projList = document.getElementById('rv-projects-list');
+        const projects = prof.projects || [];
+        if (projects.length > 0) {
+            document.getElementById('rv-card-projects').style.display = 'block';
+            projList.innerHTML = projects.map(proj => `
+                <div class="mb-3 pb-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div>
+                            <strong class="text-dark">${escapeHtml(proj.title || proj.name || 'Project')}</strong>
+                            ${proj.link ? `<a href="${escapeHtml(proj.link)}" target="_blank" rel="noopener" class="ms-2 small text-primary"><i class="bi bi-box-arrow-up-right me-1"></i>Link</a>` : ''}
+                        </div>
+                        ${proj.technologies ? `<span class="badge bg-light text-dark border">${escapeHtml(proj.technologies)}</span>` : ''}
+                    </div>
+                    <p class="small text-secondary mb-0 mt-1" style="white-space:pre-line;">${escapeHtml(stripHtmlTags(proj.description || ''))}</p>
+                </div>
+            `).join('');
+        } else {
+            document.getElementById('rv-card-projects').style.display = 'none';
+        }
+
+        // Certifications & Extra
+        const certList = document.getElementById('rv-certifications-list');
+        const certs = prof.certifications || [];
+        const achievements = prof.achievements || [];
+        const extra = prof.extracurricular_activities || [];
+        const allAdditions = [];
+
+        if (certs.length > 0) {
+            allAdditions.push(`
+                <div class="mb-2">
+                    <strong class="small text-dark d-block mb-1">Certifications:</strong>
+                    <ul class="small text-secondary mb-0 ps-3">
+                        ${certs.map(c => `<li>${escapeHtml(typeof c === 'string' ? c : (c.name || c.title || JSON.stringify(c)))}</li>`).join('')}
+                    </ul>
+                </div>
+            `);
+        }
+        if (achievements.length > 0) {
+            allAdditions.push(`
+                <div class="mb-2">
+                    <strong class="small text-dark d-block mb-1">Key Achievements:</strong>
+                    <ul class="small text-secondary mb-0 ps-3">
+                        ${achievements.map(a => `<li>${escapeHtml(typeof a === 'string' ? a : (a.title || JSON.stringify(a)))}</li>`).join('')}
+                    </ul>
+                </div>
+            `);
+        }
+        if (extra.length > 0) {
+            allAdditions.push(`
+                <div>
+                    <strong class="small text-dark d-block mb-1">Extracurricular Activities:</strong>
+                    <ul class="small text-secondary mb-0 ps-3">
+                        ${extra.map(e => `<li>${escapeHtml(typeof e === 'string' ? e : (e.title || JSON.stringify(e)))}</li>`).join('')}
+                    </ul>
+                </div>
+            `);
+        }
+
+        if (allAdditions.length > 0) {
+            document.getElementById('rv-card-certifications').style.display = 'block';
+            certList.innerHTML = allAdditions.join('');
+        } else {
+            document.getElementById('rv-card-certifications').style.display = 'none';
+        }
+
+        document.getElementById('rv-loading').style.display = 'none';
+        document.getElementById('rv-content').style.display = 'block';
+    } catch (e) {
+        console.error('Error fetching resume details:', e);
+        document.getElementById('rv-loading').innerHTML = `
+            <div class="alert alert-danger mb-0">Connection error while fetching resume details.</div>
+        `;
+    }
+}
+
+function handleVersionSelectChange(newResumeId) {
+    if (newResumeId) {
+        openResumeModal(newResumeId);
+    }
+}
+
+function openHistoryFromViewer() {
+    if (currentViewerAccountKey) {
+        openHistoryModal(currentViewerAccountKey);
+    }
+}
+
+async function openHistoryModal(accountEmail) {
+    const modalEl = document.getElementById('versionHistoryModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    document.getElementById('vh-account-email').textContent = `Account: ${accountEmail}`;
+    document.getElementById('vh-loading').style.display = 'block';
+    document.getElementById('vh-table-container').style.display = 'none';
+
+    try {
+        const res = await fetch(`/admin/user-resumes/${encodeURIComponent(accountEmail)}`);
+        const data = await res.json();
+
+        if (!res.ok || data.status !== 'success') {
+            document.getElementById('vh-loading').innerHTML = `
+                <div class="alert alert-danger m-3 mb-0">Failed to load versions: ${escapeHtml(data.message || 'Unknown error')}</div>
+            `;
+            return;
+        }
+
+        const list = data.resumes || [];
+        const tbody = document.getElementById('vh-table-body');
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No versions recorded for this account</td></tr>`;
+        } else {
+            tbody.innerHTML = list.map((v, idx) => {
+                const isLatest = (idx === 0);
+                const p = v.personal_details || {};
+                const name = p.name || v.user_name || 'Resume';
+                const versionNumber = list.length - idx;
+
+                return `
+                    <tr>
+                        <td>
+                            <strong class="text-dark">v${versionNumber}</strong>
+                            ${isLatest ? '<span class="badge bg-success-subtle text-success ms-1">Latest</span>' : ''}
+                        </td>
+                        <td><small class="text-muted">${escapeHtml(v.timestamp || '—')}</small></td>
+                        <td><span class="fw-semibold text-dark">${escapeHtml(name)}</span></td>
+                        <td>
+                            ${isLatest 
+                                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Active / Current</span>'
+                                : '<span class="badge bg-secondary-subtle text-secondary border">Historical</span>'
+                            }
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary py-1 px-2" onclick="openResumeModal('${v._id}')">
+                                <i class="bi bi-eye me-1"></i>Inspect Version
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('vh-loading').style.display = 'none';
+        document.getElementById('vh-table-container').style.display = 'block';
+    } catch (e) {
+        console.error('Error fetching version history:', e);
+        document.getElementById('vh-loading').innerHTML = `
+            <div class="alert alert-danger m-3 mb-0">Connection error while fetching version history.</div>
+        `;
+    }
+}
+
+async function openUserLatestResume(userEmail) {
+    try {
+        const res = await fetch(`/admin/user-resumes/${encodeURIComponent(userEmail)}`);
+        const data = await res.json();
+        if (data && data.resumes && data.resumes.length > 0) {
+            openResumeModal(data.resumes[0]._id);
+        } else {
+            alert('No resume records found for this user.');
+        }
+    } catch (e) {
+        console.error('Error fetching user resumes:', e);
+        alert('Could not load user resumes.');
+    }
+}
+
+// Stats & Storage Polling
+async function updateStats() {
+    try {
+        const res = await fetch('/admin/stats');
+        const d = await res.json();
+
+        // 3 Clearly Differentiated Core Metrics
+        const usersCount = d.total_unique_users || d.total_users || 0;
+        const activeResumesCount = d.current_resumes || 0;
+        const totalGeneratedCount = d.total_resumes_generated || d.total_generated || 0;
+
+        document.getElementById('stat-users').textContent = usersCount.toLocaleString();
+        document.getElementById('stat-resumes').textContent = activeResumesCount.toLocaleString();
+        const totalGenEl = document.getElementById('stat-total-gen');
+        if (totalGenEl) totalGenEl.textContent = totalGeneratedCount.toLocaleString();
+
+        // Secondary metrics
+        document.getElementById('stat-visits').textContent = (d.total_visits || 0).toLocaleString();
+        document.getElementById('stat-starts').textContent = (d.total_starts || 0).toLocaleString();
+
+        const badgeRes = document.getElementById('badge-resumes-count');
+        if (badgeRes) badgeRes.textContent = activeResumesCount.toLocaleString();
+
+        const badgeUsers = document.getElementById('badge-users-count');
+        if (badgeUsers) badgeUsers.textContent = usersCount.toLocaleString();
+    } catch (e) {
+        console.error('Stats fetch error:', e);
+    }
+}
+
+async function updateStorage() {
+    try {
+        const res = await fetch('/admin/storage');
+        const d = await res.json();
+
+        const totalMb = d.total_mb || 0;
+        const maxMb = 300;
+        const pct = Math.min((totalMb / maxMb) * 100, 100).toFixed(1);
+
+        const bar = document.getElementById('storage-bar');
+        bar.style.width = pct + '%';
+
+        const statusColors = {
+            normal: 'bg-success',
+            monitor: 'bg-warning',
+            warning: 'bg-danger',
+            critical: 'bg-danger'
+        };
+        const statusLabels = {
+            normal: 'Normal',
+            monitor: 'Monitor',
+            warning: 'Warning',
+            critical: 'Critical'
+        };
+        bar.className = 'progress-bar ' + (statusColors[d.status] || 'bg-secondary');
+
+        const badge = document.getElementById('storage-status-badge');
+        badge.textContent = statusLabels[d.status] || d.status;
+        badge.className = 'badge ms-1 ' + (statusColors[d.status] || 'bg-secondary');
+
+        document.getElementById('storage-used').textContent = totalMb.toFixed(2) + ' MB used';
+
+        const filesEl = document.getElementById('storage-files');
+        if (d.files) {
+            filesEl.innerHTML = Object.entries(d.files).map(([name, mb]) =>
+                `<span title="${name}: ${mb} MB">
+                    <i class="bi bi-file-earmark"></i>
+                    ${name}: ${mb < 0.001 ? '<0.001' : mb.toFixed(3)} MB
+                </span>`
+            ).join('');
+        }
+    } catch (e) {
+        console.error('Storage fetch error:', e);
+    }
+}
+
+updateStats();
+updateStorage();
+setInterval(updateStats, 120_000);
+setInterval(updateStorage, 60_000);
+</script>
+</body>
+</html>

@@ -6,3 +6,4 @@ google-auth-httplib2
 weasyprint
 python-dotenv
 gunicorn
+fpdf

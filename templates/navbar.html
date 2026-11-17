@@ -87,6 +87,12 @@
     </a>
     <div class="nav-links">
 
+        {% if session.get('admin_logged_in') %}
+        <a href="/admin-dashboard" class="nav-link {% if '/admin' in request.path %}active{% endif %}" style="color: #4f46e5;">
+            <i data-lucide="shield-check" style="width: 18px;"></i>
+            <span>Admin</span>
+        </a>
+        {% endif %}
         {% if session.get('user_email') %}
         <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">
             <i data-lucide="layout-dashboard" style="width: 18px;"></i>

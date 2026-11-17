@@ -419,36 +419,41 @@
             }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
             .builder-container {
-                padding: 1rem;
+                padding: 1rem 0.75rem !important;
             }
-
-            .resume-page {
-                padding: 20px 24px;
+            .section-box {
+                padding: 1.1rem 0.85rem !important;
+                margin-bottom: 1rem !important;
+                border-radius: 0.6rem !important;
             }
-
-            .r-name {
-                font-size: 20pt;
+            .action-header {
+                padding: 0.9rem !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
             }
-
-            .r-section-title {
-                font-size: 11pt;
-                margin-top: 10px;
-                margin-bottom: 3px;
+            .action-header > div:last-child {
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0.5rem !important;
             }
-
-            .r-content {
-                font-size: 10pt;
-                line-height: 1.15;
+            .btn-action {
+                width: 100% !important;
+                max-width: none !important;
+                justify-content: center !important;
             }
-
-            .r-entry {
-                margin-bottom: 3px;
+            .progress-container {
+                margin-bottom: 1.5rem !important;
+                padding: 0 0.25rem !important;
             }
-
-            .entry-title {
-                font-size: 11pt;
+            input, textarea, select {
+                font-size: 16px !important; /* Prevents auto zoom on iOS */
+            }
+            .step-dot::after {
+                font-size: 0.65rem !important;
+                bottom: -20px !important;
             }
         }
 
@@ -742,25 +747,107 @@
                 </div>
             </div>
 
-            <!-- Step 3 -->
+            <!-- Step 3: Final Review & Email Delivery -->
             <div class="form-step" id="step3" style="display:none;">
                 <!-- Step 3 Action Header -->
                 <div class="action-header section-box" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; position:sticky; top:0; z-index:100; background:rgba(255,255,255,0.95); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-radius:0.75rem; border:1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding:1rem 1.5rem; margin-bottom:1.5rem;">
                     <div>
-                        <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:0.4rem;"><i data-lucide="check-circle" style="color:#10b981;"></i> Final Draft &amp; Submit</h3>
-                        <p style="font-size:0.78rem; color:var(--text-muted);">Verify your resume layout. Go back to editing if any corrections are needed.</p>
+                        <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:0.4rem;">
+                            <i data-lucide="mail-check" style="color:#0f172a;"></i> Final Review &amp; Email Delivery
+                        </h3>
+                        <p style="font-size:0.78rem; color:var(--text-muted);">Verify recipient details. Your resume will be compiled and delivered straight to your email.</p>
                     </div>
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                         <button type="button" onclick="nextStep(2)" class="btn-action btn-outline" style="padding: 0.5rem 1rem; font-size: 0.82rem; height: 38px; display:flex; align-items:center; gap:0.4rem; border-color:#cbd5e1; background:#fff;"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Edit Details</button>
                         <button type="button" onclick="saveDraftOnly()" class="btn-action btn-outline" style="padding: 0.5rem 1rem; font-size: 0.82rem; height: 38px; display:flex; align-items:center; gap:0.4rem; border-color:#cbd5e1; background:#fff;"><i data-lucide="save" style="width:16px;height:16px;"></i> Save Draft</button>
-                        <button type="button" onclick="saveAndDownload(event)" class="btn-action btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.82rem; height: 38px; display:flex; align-items:center; gap:0.4rem; min-width:140px;"><i data-lucide="download" style="width:16px;height:16px;"></i> Download PDF</button>
                     </div>
                 </div>
-                
-                <!-- Live Preview Viewport Container -->
-                <div id="step3PreviewContainer" style="background:#525659; padding: 2.5rem 1rem; border-radius:0.75rem; display:flex; flex-direction:column; align-items:center; gap:1.5rem; min-height:600px; box-shadow:inset 0 2px 10px rgba(0,0,0,0.2); overflow-x:auto;">
-                    <div id="step3PagesContainer" style="display:flex; flex-direction:column; align-items:center; gap:1.5rem; width:100%;">
-                        <!-- Pages will be injected here by buildPreview() -->
+
+                <!-- Review & Delivery Card -->
+                <div class="section-box" style="padding: 2rem 1.5rem; border-radius: 12px; background: #fff;">
+                    <!-- Notice Banner -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.75rem;">
+                        <div style="display:flex; align-items:flex-start; gap:0.75rem;">
+                            <i data-lucide="shield-check" style="width:24px; height:24px; color:#0f172a; flex-shrink:0; margin-top:2px;"></i>
+                            <div>
+                                <h4 style="font-size:0.95rem; font-weight:700; color:#0f172a; margin-bottom:0.25rem;">Email-Only Delivery Policy</h4>
+                                <p style="font-size:0.85rem; color:#475569; margin:0; line-height:1.5;">
+                                    In accordance with delivery standards, direct in-browser downloads and PDF previews are disabled. Your resume will be compiled on our backend server and delivered directly as a secure PDF attachment to your registered email address.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recipient Details Box -->
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1.5rem; margin-bottom:1.5rem;">
+                        <h4 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                            <i data-lucide="user-check" style="width:16px; height:16px;"></i> Delivery Information
+                        </h4>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.25rem;">
+                            <div>
+                                <small style="display:block; color:#64748b; font-size:0.78rem; text-transform:uppercase; font-weight:600;">Candidate Name</small>
+                                <span id="reviewCandidateName" style="font-weight:700; font-size:1.05rem; color:#0f172a;">—</span>
+                            </div>
+                            <div>
+                                <small style="display:block; color:#64748b; font-size:0.78rem; text-transform:uppercase; font-weight:600;">Recipient Email Address</small>
+                                <span id="reviewCandidateEmail" style="font-weight:700; font-size:1.05rem; color:#0f172a;">—</span>
+                            </div>
+                            <div>
+                                <small style="display:block; color:#64748b; font-size:0.78rem; text-transform:uppercase; font-weight:600;">Contact Phone</small>
+                                <span id="reviewCandidatePhone" style="font-weight:600; font-size:0.95rem; color:#334155;">—</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:1.25rem; padding-top:1.25rem; border-top:1px dashed #e2e8f0;">
+                            <small style="display:block; color:#64748b; font-size:0.78rem; text-transform:uppercase; font-weight:600; margin-bottom:0.5rem;">Resume Sections Included</small>
+                            <div id="reviewSectionsBadges" style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                                <!-- Badges populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Status Alerts -->
+                    <div id="deliverySuccessAlert" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:1.75rem; text-align:center; margin-bottom:1.5rem;">
+                        <div style="width:52px; height:52px; background:#10b981; color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1rem;">
+                            <i data-lucide="check-circle-2" style="width:28px; height:28px;"></i>
+                        </div>
+                        <h3 style="font-size:1.25rem; font-weight:800; color:#065f46; margin-bottom:0.4rem;">Resume Delivered Successfully!</h3>
+                        <p style="color:#047857; font-size:0.92rem; max-width:480px; margin:0 auto 1.25rem; line-height:1.5;">
+                            Your professional resume PDF has been compiled and emailed to <strong id="successRecipientEmail"></strong>. Please check your inbox (and spam folder if not received in 1-2 minutes).
+                        </p>
+                        <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+                            <a href="/dashboard" class="btn-action btn-primary" style="padding:0.65rem 1.5rem; text-decoration:none; border-radius:6px;">
+                                <i data-lucide="layout-dashboard"></i> Return to Dashboard
+                            </a>
+                            <button type="button" onclick="nextStep(2)" class="btn-action btn-outline" style="padding:0.65rem 1.5rem; border-radius:6px;">
+                                <i data-lucide="edit"></i> Edit Resume
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="deliveryErrorAlert" style="display:none; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;">
+                        <div style="display:flex; align-items:flex-start; gap:0.75rem;">
+                            <i data-lucide="alert-circle" style="width:22px; height:22px; color:#ef4444; flex-shrink:0; margin-top:2px;"></i>
+                            <div>
+                                <h4 style="font-size:0.95rem; font-weight:700; color:#991b1b; margin-bottom:0.25rem;">Email Delivery Failed</h4>
+                                <p id="deliveryErrorMessage" style="font-size:0.85rem; color:#b91c1c; margin:0; line-height:1.5;">
+                                    Could not send email to your address. Please verify your email details.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dispatch Trigger Box -->
+                    <div id="dispatchActionBox" style="text-align:center; padding:1rem 0;">
+                        <button type="button" id="btn-generate-email" onclick="generateAndEmailResume(event)"
+                                class="btn-action btn-primary"
+                                style="padding: 0.9rem 2.2rem; font-size: 1rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; min-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,0.12);">
+                            <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+                            <span>Generate &amp; Email Resume</span>
+                        </button>
+                        <p style="color:#64748b; font-size:0.8rem; margin-top:0.75rem;">
+                            High-quality ATS formatting applied automatically. Delivered only as email attachment.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -927,7 +1014,7 @@
             localStorage.setItem('currentStep', step);
             
             if (step === 3) {
-                buildPreview();
+                populateDeliveryReview();
             }
             
             lucide.createIcons();
@@ -1930,77 +2017,127 @@
             }
         }
 
-        async function saveAndDownload(event) {
+        function populateDeliveryReview() {
+            const data = serializeFormData();
+            const nameEl = document.getElementById('reviewCandidateName');
+            const emailEl = document.getElementById('reviewCandidateEmail');
+            const phoneEl = document.getElementById('reviewCandidatePhone');
+            const badgesEl = document.getElementById('reviewSectionsBadges');
+
+            if (nameEl) nameEl.textContent = data.personal_details.name || 'Not provided';
+            if (emailEl) emailEl.textContent = data.personal_details.email || 'Not provided';
+            if (phoneEl) phoneEl.textContent = data.personal_details.phone || '—';
+
+            if (badgesEl) {
+                const sections = [];
+                const pd = data.professional_details || {};
+                if (hasContent(pd.summary)) sections.push('Objective / Summary');
+                if ((pd.education || []).length > 0) sections.push(`Education (${pd.education.length})`);
+                if ((pd.work_experience || []).length > 0) sections.push(`Experience (${pd.work_experience.length})`);
+                if (hasContent(pd.technical_skills) || hasContent(pd.non_technical_skills)) sections.push('Skills');
+                if ((pd.projects || []).length > 0) sections.push(`Projects (${pd.projects.length})`);
+                if (hasContent(pd.certifications)) sections.push('Certifications');
+                if (hasContent(pd.achievements)) sections.push('Achievements');
+                if (hasContent(pd.extracurricular_activities)) sections.push('Extracurricular');
+
+                if (sections.length === 0) {
+                    badgesEl.innerHTML = '<span class="text-muted small">No optional sections filled yet</span>';
+                } else {
+                    badgesEl.innerHTML = sections.map(s =>
+                        `<span style="background:#f1f5f9; color:#334155; font-size:0.75rem; font-weight:600; padding:4px 10px; border-radius:999px; border:1px solid #e2e8f0;">${s}</span>`
+                    ).join('');
+                }
+            }
+        }
+
+        async function generateAndEmailResume(event) {
             const data = serializeFormData();
 
             if (!data.personal_details.name || !data.personal_details.email) {
-                alert('Please provide at least Name and Email');
+                alert('Please provide at least Name and Email in Step 1');
+                nextStep(1);
                 return;
             }
 
+            const btn = document.getElementById('btn-generate-email');
+            const originalHtml = btn ? btn.innerHTML : '';
+            const errAlert = document.getElementById('deliveryErrorAlert');
+            const successAlert = document.getElementById('deliverySuccessAlert');
+            const actionBox = document.getElementById('dispatchActionBox');
+
+            if (errAlert) errAlert.style.display = 'none';
+            if (successAlert) successAlert.style.display = 'none';
+
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF &amp; Sending Email...';
+                btn.disabled = true;
+            }
+
             try {
-                // 1. Save data to backend
-                const saveRes = await fetch('/save', {
+                // 1. Save data to backend first
+                try {
+                    const saveRes = await fetch('/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (saveRes.ok) {
+                        const saveJson = await saveRes.json();
+                        if (saveJson.resume_id && !currentResumeId) {
+                            window.history.replaceState(null, '', `/builder/${saveJson.resume_id}`);
+                        }
+                    }
+                } catch (saveErr) {
+                    console.warn('Draft save notice:', saveErr);
+                }
+
+                // 2. Request backend to compile PDF temporarily and email it
+                const res = await fetch('/generate-and-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
-                if (saveRes.ok) {
-                    const saveJson = await saveRes.json();
-                    if (saveJson.resume_id && !currentResumeId) {
-                        window.history.replaceState(null, '', `/builder/${saveJson.resume_id}`);
+                const result = await res.json();
+
+                if (res.ok && result.status === 'success') {
+                    // Delivery succeeded
+                    if (successAlert) {
+                        const recEl = document.getElementById('successRecipientEmail');
+                        if (recEl) recEl.textContent = result.recipient || data.personal_details.email;
+                        successAlert.style.display = 'block';
+                        successAlert.scrollIntoView({ behavior: 'smooth' });
                     }
-                } else {
-                    console.warn('Backend save failed, but proceeding with PDF generation.');
-                }
-
-                // 2. Build the preview in step 3
-                buildPreview();
-
-                // 3. Generate PDF using Backend
-                const btn = event ? event.currentTarget : null;
-                const originalHtml = btn ? btn.innerHTML : '';
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-                    btn.disabled = true;
-                }
-
-                const pdfRes = await fetch('/download-pdf', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (pdfRes.ok) {
-                    const blob = await pdfRes.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${data.personal_details.name.replace(/ /g, '_')}_Resume.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    
-                    if (btn) {
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
-                    }
+                    if (actionBox) actionBox.style.display = 'none';
                     localStorage.removeItem('currentStep');
-                    window.location.href = '/thank-you';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 } else {
-                    const errorText = await pdfRes.text();
-                    console.error('PDF Generation Error:', errorText);
-                    alert('Error generating PDF on backend: ' + errorText);
-                    if (btn) {
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
+                    // Delivery failed - DO NOT show success
+                    const errMsg = result.message || 'Could not send resume to email. Please verify SMTP settings.';
+                    if (errAlert) {
+                        const msgEl = document.getElementById('deliveryErrorMessage');
+                        if (msgEl) msgEl.textContent = errMsg;
+                        errAlert.style.display = 'block';
+                        errAlert.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('Email delivery error: ' + errMsg);
                     }
                 }
-
             } catch (e) {
-                console.error(e);
-                alert('Connection error');
+                console.error('Connection error:', e);
+                if (errAlert) {
+                    const msgEl = document.getElementById('deliveryErrorMessage');
+                    if (msgEl) msgEl.textContent = 'Connection error while communicating with server. Please try again.';
+                    errAlert.style.display = 'block';
+                } else {
+                    alert('Connection error');
+                }
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
             }
         }
 

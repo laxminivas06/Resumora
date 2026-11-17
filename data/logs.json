@@ -1,0 +1,28 @@
+[
+    {
+        "event": "admin_login_success",
+        "email": "laxminivasmorishetty143@gmail.com",
+        "timestamp": "2026-11-17 09:41:24",
+        "data": {}
+    },
+    {
+        "event": "resume_delivered_email",
+        "email": "test.candidate@example.com",
+        "timestamp": "2026-11-17 09:41:41",
+        "data": {
+            "filename": "Test_Candidate_Resume.pdf"
+        }
+    },
+    {
+        "event": "admin_login_success",
+        "email": "laxminivasmorishetty143@gmail.com",
+        "timestamp": "2026-11-17 10:11:41",
+        "data": {}
+    },
+    {
+        "event": "login",
+        "email": "laxminivasmorishetty143@gmail.com",
+        "timestamp": "2026-11-17 10:13:30",
+        "data": {}
+    }
+]
