@@ -1564,9 +1564,9 @@
                                 extra: backendData.professional_details.extracurricular_activities
                             },
                             dynamic: {
-                                education: backendData.professional_details.education.map((f, i) => ({ id: Date.now() + i, type: 'education', fields: f })),
-                                experience: backendData.professional_details.work_experience.map((f, i) => ({ id: Date.now() + 1000 + i, type: 'experience', fields: f })),
-                                projects: backendData.professional_details.projects.map((f, i) => ({ id: Date.now() + 2000 + i, type: 'projects', fields: f }))
+                                education: (Array.isArray(backendData.professional_details.education) ? backendData.professional_details.education : []).map((f, i) => ({ id: Date.now() + i, type: 'education', fields: f })),
+                                experience: (Array.isArray(backendData.professional_details.work_experience) ? backendData.professional_details.work_experience : []).map((f, i) => ({ id: Date.now() + 1000 + i, type: 'experience', fields: f })),
+                                projects: (Array.isArray(backendData.professional_details.projects) ? backendData.professional_details.projects : []).map((f, i) => ({ id: Date.now() + 2000 + i, type: 'projects', fields: f }))
                             }
                         });
                         console.log("Loaded data from backend");

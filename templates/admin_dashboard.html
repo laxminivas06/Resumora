@@ -1125,10 +1125,57 @@ function escapeHtml(str) {
 }
 
 function stripHtmlTags(str) {
-    if (!str) return '';
+    if (str === null || str === undefined) return '';
+    if (typeof str !== 'string') str = String(str);
     const tmp = document.createElement('DIV');
     tmp.innerHTML = str;
     return tmp.textContent || tmp.innerText || '';
+}
+
+function parseSectionItems(val) {
+    if (!val) return [];
+    if (Array.isArray(val)) {
+        return val.map(item => {
+            if (typeof item === 'string') return stripHtmlTags(item).trim();
+            if (item && typeof item === 'object') {
+                return stripHtmlTags(item.name || item.title || item.text || JSON.stringify(item)).trim();
+            }
+            return String(item).trim();
+        }).filter(Boolean);
+    }
+    if (typeof val === 'string') {
+        const trimmed = val.trim();
+        if (!trimmed) return [];
+        if (trimmed.includes('<li') || trimmed.includes('<p') || trimmed.includes('<br')) {
+            const temp = document.createElement('div');
+            temp.innerHTML = trimmed;
+            const lis = temp.querySelectorAll('li');
+            if (lis.length > 0) {
+                return Array.from(lis).map(li => li.textContent.trim()).filter(Boolean);
+            }
+            const ps = temp.querySelectorAll('p');
+            if (ps.length > 0) {
+                return Array.from(ps).map(p => p.textContent.trim()).filter(Boolean);
+            }
+            const text = temp.textContent || temp.innerText || '';
+            return text.split('\n').map(s => s.trim()).filter(Boolean);
+        }
+        return trimmed.split(/[\r\n]+/).map(s => s.trim()).filter(Boolean);
+    }
+    return [String(val).trim()].filter(Boolean);
+}
+
+function renderSectionItems(val, title) {
+    const items = parseSectionItems(val);
+    if (items.length === 0) return '';
+    return `
+        <div class="mb-3">
+            <strong class="small text-dark d-block mb-1">${escapeHtml(title)}:</strong>
+            <ul class="small text-secondary mb-0 ps-3">
+                ${items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}
+            </ul>
+        </div>
+    `;
 }
 
 async function openResumeModal(resumeId) {
@@ -1243,7 +1290,7 @@ async function openResumeModal(resumeId) {
 
         // Work Experience
         const expList = document.getElementById('rv-experience-list');
-        const experiences = prof.work_experience || [];
+        const experiences = Array.isArray(prof.work_experience) ? prof.work_experience : [];
         if (experiences.length > 0) {
             document.getElementById('rv-card-experience').style.display = 'block';
             expList.innerHTML = experiences.map(exp => `
@@ -1266,7 +1313,7 @@ async function openResumeModal(resumeId) {
 
         // Education
         const eduList = document.getElementById('rv-education-list');
-        const education = prof.education || [];
+        const education = Array.isArray(prof.education) ? prof.education : [];
         if (education.length > 0) {
             document.getElementById('rv-card-education').style.display = 'block';
             eduList.innerHTML = education.map(edu => `
@@ -1289,7 +1336,7 @@ async function openResumeModal(resumeId) {
 
         // Projects
         const projList = document.getElementById('rv-projects-list');
-        const projects = prof.projects || [];
+        const projects = Array.isArray(prof.projects) ? prof.projects : [];
         if (projects.length > 0) {
             document.getElementById('rv-card-projects').style.display = 'block';
             projList.innerHTML = projects.map(proj => `
@@ -1308,42 +1355,29 @@ async function openResumeModal(resumeId) {
             document.getElementById('rv-card-projects').style.display = 'none';
         }
 
-        // Certifications & Extra
+        // Certifications, Research, Achievements, Extracurricular & Custom Sections
         const certList = document.getElementById('rv-certifications-list');
-        const certs = prof.certifications || [];
-        const achievements = prof.achievements || [];
-        const extra = prof.extracurricular_activities || [];
         const allAdditions = [];
 
-        if (certs.length > 0) {
-            allAdditions.push(`
-                <div class="mb-2">
-                    <strong class="small text-dark d-block mb-1">Certifications:</strong>
-                    <ul class="small text-secondary mb-0 ps-3">
-                        ${certs.map(c => `<li>${escapeHtml(typeof c === 'string' ? c : (c.name || c.title || JSON.stringify(c)))}</li>`).join('')}
-                    </ul>
-                </div>
-            `);
-        }
-        if (achievements.length > 0) {
-            allAdditions.push(`
-                <div class="mb-2">
-                    <strong class="small text-dark d-block mb-1">Key Achievements:</strong>
-                    <ul class="small text-secondary mb-0 ps-3">
-                        ${achievements.map(a => `<li>${escapeHtml(typeof a === 'string' ? a : (a.title || JSON.stringify(a)))}</li>`).join('')}
-                    </ul>
-                </div>
-            `);
-        }
-        if (extra.length > 0) {
-            allAdditions.push(`
-                <div>
-                    <strong class="small text-dark d-block mb-1">Extracurricular Activities:</strong>
-                    <ul class="small text-secondary mb-0 ps-3">
-                        ${extra.map(e => `<li>${escapeHtml(typeof e === 'string' ? e : (e.title || JSON.stringify(e)))}</li>`).join('')}
-                    </ul>
-                </div>
-            `);
+        const certsHtml = renderSectionItems(prof.certifications, 'Certifications');
+        if (certsHtml) allAdditions.push(certsHtml);
+
+        const papersHtml = renderSectionItems(prof.research_papers, 'Research Papers & Publications');
+        if (papersHtml) allAdditions.push(papersHtml);
+
+        const achieveHtml = renderSectionItems(prof.achievements, 'Key Achievements');
+        if (achieveHtml) allAdditions.push(achieveHtml);
+
+        const extraHtml = renderSectionItems(prof.extracurricular_activities, 'Extracurricular Activities');
+        if (extraHtml) allAdditions.push(extraHtml);
+
+        if (Array.isArray(prof.custom_sections)) {
+            prof.custom_sections.forEach(cs => {
+                if (cs && cs.name) {
+                    const csHtml = renderSectionItems(cs.content, cs.name);
+                    if (csHtml) allAdditions.push(csHtml);
+                }
+            });
         }
 
         if (allAdditions.length > 0) {
