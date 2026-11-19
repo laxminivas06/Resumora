@@ -8,6 +8,7 @@ import time
 import base64
 import logging
 import smtplib
+import ssl
 import threading
 from pathlib import Path
 from io import BytesIO, TextIOWrapper
@@ -833,24 +834,38 @@ Phone: +91 7893772246
                 filename=filename
             )
 
-            if config.SMTP_USE_SSL:
-                smtp_cls = smtplib.SMTP_SSL
-                connect_args = (config.SMTP_HOST, config.SMTP_PORT, None, None, config.SMTP_TIMEOUT)
-            else:
-                smtp_cls = smtplib.SMTP
-                connect_args = (config.SMTP_HOST, config.SMTP_PORT, None, config.SMTP_TIMEOUT)
+            clean_password = (config.SMTP_PASSWORD or '').replace(' ', '').strip()
+            ssl_context = ssl.create_default_context()
 
-            with smtp_cls(*connect_args) as smtp:
+            if config.SMTP_USE_SSL:
+                server = smtplib.SMTP_SSL(
+                    host=config.SMTP_HOST,
+                    port=config.SMTP_PORT,
+                    timeout=config.SMTP_TIMEOUT,
+                    context=ssl_context
+                )
+            else:
+                server = smtplib.SMTP(
+                    host=config.SMTP_HOST,
+                    port=config.SMTP_PORT,
+                    timeout=config.SMTP_TIMEOUT
+                )
+
+            with server as smtp:
                 if not config.SMTP_USE_SSL:
-                    smtp.starttls()
-                smtp.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
+                    smtp.starttls(context=ssl_context)
+                if config.SMTP_USERNAME and clean_password:
+                    smtp.login(config.SMTP_USERNAME, clean_password)
                 smtp.send_message(msg)
 
             logger.info(f"Resume email successfully delivered to {to_email} (attempt {attempt})")
             return True
 
         except smtplib.SMTPAuthenticationError as e:
-            logger.error(f"SMTP authentication failure for {to_email}: {e}")
+            logger.error(
+                f"SMTP authentication failure for {to_email} with user {config.SMTP_USERNAME}: {e}. "
+                f"Please verify the Google App Password in .env is valid and active."
+            )
             return False
 
         except Exception as e:
