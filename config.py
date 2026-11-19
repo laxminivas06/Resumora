@@ -58,18 +58,18 @@ GOOGLE_CLIENT_ID = os.environ.get(
 )
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
-# SMTP Email Configuration
-SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
-SMTP_PORT = int(os.environ.get('SMTP_PORT', '465'))
-SMTP_USE_SSL = os.environ.get('SMTP_USE_SSL', 'true').lower() == 'true'
-SMTP_USERNAME = os.environ.get('SMTP_USERNAME', 'hello.aivontraa@gmail.com')
-SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', 'lfwp ykno bhge gduw')
-SMTP_TIMEOUT = int(os.environ.get('SMTP_TIMEOUT', '30'))
-SMTP_MAX_RETRIES = int(os.environ.get('SMTP_MAX_RETRIES', '3'))
-SMTP_RETRY_DELAY = int(os.environ.get('SMTP_RETRY_DELAY', '5'))
+# SMTP Email Configuration (Managed directly in config.py)
+SMTP_HOST = 'smtp.gmail.com'
+SMTP_PORT = 465
+SMTP_USE_SSL = True
+SMTP_USERNAME = 'hello.aivontraa@gmail.com'
+SMTP_PASSWORD = 'ewsr ywdn qawe jlbr'
+SMTP_TIMEOUT = 30
+SMTP_MAX_RETRIES = 3
+SMTP_RETRY_DELAY = 5
 
-EMAIL_FROM_NAME = os.environ.get('EMAIL_FROM_NAME', 'Resumora')
-EMAIL_FROM_ADDRESS = os.environ.get('EMAIL_FROM_ADDRESS', SMTP_USERNAME or 'hello.aivontraa@gmail.com')
+EMAIL_FROM_NAME = 'Resumora'
+EMAIL_FROM_ADDRESS = 'hello.aivontraa@gmail.com'
 
 # Storage thresholds (MB)
 STORAGE_WARN_MB = float(os.environ.get('STORAGE_WARN_MB', '50'))
